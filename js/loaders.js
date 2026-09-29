@@ -20,11 +20,16 @@ async function cloudLoadProject(folderId, topProjectId, docId) {
     config: {}, css: '', logo: '', files: {}, fileOrder: []
   };
 
-  const data = await cloudFetchDocument(folderId);
+  // A dokumentum, a projekt témája és logója egyszerre töltődik.
+  const [data, projTheme, projLogo] = await Promise.all([
+    cloudFetchDocument(folderId),
+    cloudGetProjectTheme(topProjectId),
+    cloudGetProjectLogo(topProjectId),
+  ]);
   project.config = data.config;
   // Megjelenés: a PROJEKT témája (ha még nincs, a dokumentum régi színei).
-  project.themeVars = await resolveDocTheme(topProjectId, data.css);
-  project.logo = await resolveDocLogo(topProjectId, data.logo); // a projekt logója (régi dokumentumnál a saját)
+  project.themeVars = projTheme || themeVarsFromLegacyCss(data.css) || normalizeThemeVars({});
+  project.logo = projLogo != null ? projLogo : (data.logo || ''); // a projekt logója (régi dokumentumnál a saját) // a projekt logója (régi dokumentumnál a saját)
   project.remoteConfig = data.configText != null ? data.configText : null;
   for (const [fn, raw] of Object.entries(data.files)) {
     const f = makeFileEntry(raw);

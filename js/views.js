@@ -62,11 +62,23 @@ async function showHomeView() {
   if (home) home.classList.add('active');
   updateTopbarToolsVisibility();
   updateBreadcrumb();
-  state.homeProjects = null;
-  renderHomeGrid();
-  state.homeProjects = await cloudListTopProjects();
+  // Azonnal a legutóbbi (helyben megjegyzett) lista látszik, a háttérben frissül a felhőből.
+  const cached = readHomeCache();
+  state.homeProjects = cached ? cached.projects : null;
   syncHomeFolderMeta();
   renderHomeGrid();
+  setHomeRefreshing(true);
+  try {
+    state.homeProjects = await cloudListTopProjects();
+  } finally { setHomeRefreshing(false); }
+  syncHomeFolderMeta(true);
+  if (state.uiView === 'home') renderHomeGrid();
+}
+
+// Kis „frissítés…” jelzés a Kezdőlapon, amíg a háttérben töltődik a friss lista.
+function setHomeRefreshing(on) {
+  const el = document.getElementById('home-count');
+  if (el) el.classList.toggle('refreshing', !!on);
 }
 
 // Egy projekt (mappa) megnyitása a Kezdőlapon: a táblázatban csak az ő dokumentumai.
@@ -90,10 +102,11 @@ function setHomeFolder(projectId) {
   syncHomeFolderMeta();
 }
 // Az új dokumentum / importálás / megjelenés a kiválasztott projektre vonatkozik.
-function syncHomeFolderMeta() {
+// final: a friss (felhőből jött) lista alapján — ha a kiválasztott projekt már nem létezik, az „Összes” lesz.
+function syncHomeFolderMeta(final) {
   const id = getHomeFolder();
   const meta = id && (state.homeProjects || []).find(p => p.id === id);
-  if (id && state.homeProjects && !meta) { state.homeFolder = null; try { localStorage.removeItem(HOME_FOLDER_KEY); } catch(e) {} }
+  if (final && id && state.homeProjects && !meta) { state.homeFolder = null; try { localStorage.removeItem(HOME_FOLDER_KEY); } catch(e) {} }
   state.currentTopProject = meta ? meta.id : null;
   state.currentTopProjectMeta = meta || null;
 }
@@ -115,7 +128,10 @@ function setHomeSort(key) {
 }
 
 // Egy dokumentum-művelet (átnevezés, törlés, áthelyezés) után a látható nézet frissítése.
-function refreshDocViews() { if (state.uiView === 'home') renderHomeGrid(); }
+function refreshDocViews() {
+  if (state.homeProjects) saveHomeCache(state.homeProjects); // a helyi másolat is frissüljön
+  if (state.uiView === 'home') renderHomeGrid();
+}
 
 function renderHomeGrid() {
   renderHomeFolders();
@@ -291,7 +307,7 @@ async function moveDocToProject(fromProjectId, docId, title, toProjectId) {
   await forgetLocalCopy(fromProjectId + '/' + docId); // ha a régi helyéről meg volt nyitva
   toast('✓ Dokumentum áthelyezve');
   state.homeProjects = await cloudListTopProjects();
-  syncHomeFolderMeta();
+  syncHomeFolderMeta(true);
   renderHomeGrid();
 }
 
@@ -405,6 +421,7 @@ async function deleteTopProjectFromHome(projectId, name) {
 
   state.homeProjects = (state.homeProjects || []).filter(p => p.id !== projectId);
   if (getHomeFolder() === projectId) setHomeFolder(null);
+  saveHomeCache(state.homeProjects);
   renderHomeGrid();
   toast('✓ Projekt törölve');
 }
@@ -589,8 +606,12 @@ function renderDocSwitcher() {
 }
 
 async function refreshDocSwitcher() {
+  if (!state.homeProjects) { const c = readHomeCache(); if (c) state.homeProjects = c.projects; }
   renderDocSwitcher();
   if (_switcherLoading) return _switcherLoading;
+  // Ha a lista friss (fél percen belül töltöttük), nem kérdezzük le újra.
+  const c = readHomeCache();
+  if (state.homeProjects && c && Date.now() - c.at < 30000) return;
   _switcherLoading = (async () => {
     try {
       const list = await cloudListTopProjects();

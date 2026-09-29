@@ -113,6 +113,7 @@ async function cloudLogin() {
   document.getElementById('auth-password').value = '';
 }
 async function cloudLogout() {
+  clearHomeCache(); // a dokumentumlista helyi másolata ne maradjon a gépen
   await supabaseClient.auth.signOut();
   showHomeView();
 }

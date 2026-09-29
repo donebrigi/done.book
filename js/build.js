@@ -13,12 +13,14 @@ async function loadDocForExport(projectId, docId) {
     if (hasUnsavedWork()) await saveAllDirty({ quiet: true });
     return open;
   }
-  const data = await cloudFetchDocument(folder);
+  const [data, projTheme, projLogo] = await Promise.all([
+    cloudFetchDocument(folder), cloudGetProjectTheme(projectId), cloudGetProjectLogo(projectId),
+  ]);
   if (!data || (!data.configText && !Object.keys(data.files || {}).length)) return null;
   const proj = { name: folder, cloudFolder: folder, topProjectId: projectId, docId,
     config: data.config || {}, files: {}, fileOrder: [] };
-  proj.themeVars = await resolveDocTheme(projectId, data.css);
-  proj.logo = await resolveDocLogo(projectId, data.logo);
+  proj.themeVars = projTheme || themeVarsFromLegacyCss(data.css) || normalizeThemeVars({});
+  proj.logo = projLogo != null ? projLogo : (data.logo || '');
   for (const [fn, raw] of Object.entries(data.files)) {
     const f = makeFileEntry(raw);
     ensureChapterMeta(fn, f);

@@ -47,6 +47,24 @@ const isCloudFile = e => e.id !== null;
 // tartalmazó másolat, amire a megosztható link és a gyors letöltés gomb épül.
 
 
+// ── Párhuzamos lekérések ──
+// A felhőből sok kis fájlt kell letölteni (fejezetek, config-ok). Egymás után ez lassú
+// (minden kérés kivárja az előzőt), ezért egyszerre legfeljebb CLOUD_PARALLEL kérést
+// indítunk. Az eredmények sorrendje megegyezik a bemenetével.
+const CLOUD_PARALLEL = 8;
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i], i);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
 // ── Storage segédfüggvények ──
 async function cloudDownloadText(path) {
   const { data, error } = await cloudBucket().download(path);
@@ -117,17 +135,31 @@ async function cloudListProjectIds() {
 }
 
 async function cloudListTopProjects() {
-  const projects = [];
-  for (const id of await cloudListProjectIds()) {
-    const meta = (await cloudGetProjectMeta(id)) || defaultProjectMeta(id);
-    // A dokumentumszám ugyanabból a cloudListDocuments()-ből jön, amit a Projekt nézet
-    // mutat — így csak a valódi (config.json-nal rendelkező) Dokumentum-mappák számítanak.
-    meta.docs = await cloudListDocuments(id);
-    meta.docCount = meta.docs.length;
-    projects.push(meta);
-  }
+  const ids = await cloudListProjectIds();
+  // Projektenként párhuzamosan: metaadat + dokumentumlista.
+  const projects = await mapLimit(ids, 4, async id => {
+    const [metaRaw, docs] = await Promise.all([cloudGetProjectMeta(id), cloudListDocuments(id)]);
+    const meta = metaRaw || defaultProjectMeta(id);
+    // A dokumentumszám a cloudListDocuments()-ből jön — csak a valódi (config.json-nal
+    // rendelkező) Dokumentum-mappák számítanak.
+    meta.docs = docs;
+    meta.docCount = docs.length;
+    return meta;
+  });
+  saveHomeCache(projects);
   return projects;
 }
+
+// A Kezdőlap adatainak helyi másolata: a következő megnyitáskor azonnal megjelenik,
+// és a háttérben frissül a felhőből (a kolléga változásai így pár másodpercen belül látszanak).
+const HOME_CACHE_KEY = 'kk:homeCache';
+function saveHomeCache(projects) {
+  try { localStorage.setItem(HOME_CACHE_KEY, JSON.stringify({ at: Date.now(), projects })); } catch(e) {}
+}
+function readHomeCache() {
+  try { const c = JSON.parse(localStorage.getItem(HOME_CACHE_KEY) || 'null'); return c && Array.isArray(c.projects) ? c : null; } catch(e) { return null; }
+}
+function clearHomeCache() { try { localStorage.removeItem(HOME_CACHE_KEY); } catch(e) {} }
 
 const isChapterFile = name => name.endsWith('.md') && name !== 'README.md';
 
@@ -136,39 +168,46 @@ async function cloudListDocuments(projectId) {
   // "sections" fenntartott név: a régi, "lapos" felhő projekteknél ez közvetlenül a
   // projekt gyökerében volt — ne jelenjen meg áldokumentumként.
   const docIds = (data || []).filter(e => isCloudFolder(e) && e.name !== 'sections').map(e => e.name);
-  const docs = [];
-  for (const docId of docIds) {
+  const docs = await mapLimit(docIds, CLOUD_PARALLEL, async docId => {
     const folder = projectId + '/' + docId;
-    const configText = await cloudDownloadText(folder + '/config.json');
-    if (!configText) continue; // nincs config.json → nem valódi Dokumentum-mappa
+    // a három kérés egyszerre megy
+    const [configText, entries, sectionEntries] = await Promise.all([
+      cloudDownloadText(folder + '/config.json'),
+      cloudList(folder, 20),
+      cloudList(folder + '/sections', 500),
+    ]);
+    if (!configText) return null; // nincs config.json → nem valódi Dokumentum-mappa
     const meta = { id: docId, title: docId, chapterCount: 0, updatedAt: null };
     try { meta.title = JSON.parse(configText).title || docId; } catch(e) {}
-    const entries = await cloudList(folder, 20);
     const cfgEntry = (entries || []).find(e => e.name === 'config.json');
-    if (cfgEntry && cfgEntry.updated_at) meta.updatedAt = cfgEntry.updated_at;
+    // A „Dátum”: a dokumentum legutóbbi módosítása (config vagy bármelyik fejezet).
+    const times = [cfgEntry && cfgEntry.updated_at].concat((sectionEntries || []).map(e => e.updated_at)).filter(Boolean).sort();
+    if (times.length) meta.updatedAt = times[times.length - 1];
     // A fejezetszám a sections/ tényleges .md fájljaiból jön, nem a config.json fileOrder-ből.
-    const sectionEntries = await cloudList(folder + '/sections', 500);
     meta.chapterCount = (sectionEntries || []).filter(e => isCloudFile(e) && isChapterFile(e.name)).length;
-    docs.push(meta);
-  }
-  return docs;
+    return meta;
+  });
+  return docs.filter(Boolean);
 }
 
 // Egy Dokumentum teljes tartalmának letöltése (config, css, logó, fejezetek).
 // A loaders.js cloudLoadProject() ebből építi fel a szerkesztő projekt-objektumát.
+// Minden fájl párhuzamosan töltődik (CLOUD_PARALLEL kérés egyszerre).
 async function cloudFetchDocument(folderId) {
   const out = { config: {}, css: '', logo: '', files: {} };
-  const configText = await cloudDownloadText(folderId + '/config.json');
+  const [configText, css, logo, entries] = await Promise.all([
+    cloudDownloadText(folderId + '/config.json'),
+    cloudDownloadText(folderId + '/style.css'),
+    cloudDownloadText(folderId + '/logo.txt'),
+    cloudList(folderId + '/sections', 500),
+  ]);
   out.configText = configText;
   if (configText) { try { out.config = JSON.parse(configText); } catch(e) {} }
-  out.css = (await cloudDownloadText(folderId + '/style.css')) || '';
-  out.logo = ((await cloudDownloadText(folderId + '/logo.txt')) || '').trim();
-  const entries = await cloudList(folderId + '/sections', 500);
-  for (const entry of (entries || [])) {
-    if (!isCloudFile(entry) || !isChapterFile(entry.name)) continue;
-    const text = await cloudDownloadText(folderId + '/sections/' + entry.name);
-    if (text !== null) out.files[entry.name] = text;
-  }
+  out.css = css || '';
+  out.logo = (logo || '').trim();
+  const names = (entries || []).filter(e => isCloudFile(e) && isChapterFile(e.name)).map(e => e.name);
+  const texts = await mapLimit(names, CLOUD_PARALLEL, name => cloudDownloadText(folderId + '/sections/' + name));
+  names.forEach((name, i) => { if (texts[i] !== null) out.files[name] = texts[i]; });
   return out;
 }
 
