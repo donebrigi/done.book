@@ -33,7 +33,7 @@ function renderPreview() {
     try { popScrollX = popWin.scrollX || 0; popScrollY = popWin.scrollY || 0; } catch(e) {}
   }
 
-  let html = buildPreviewHtml(proj, buildAllSectionsHtml(proj, { showNotes: true, lines: true }), true, getWorkingCss(proj));
+  let html = buildPreviewHtml(proj, buildAllSectionsHtml(proj, { lines: true }), true, getWorkingCss(proj));
   // images/… hivatkozások → a gyorsítótárazott képek (ha még töltődnek, betöltés után újrarajzol)
   html = resolveImagesPreview(html, proj, schedulePreview);
 

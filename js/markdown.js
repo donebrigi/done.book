@@ -23,11 +23,12 @@ function serializeChapter(meta, content) {
   return '---\n' + lines.join('\n') + '\n---\n\n' + (content || '').replace(/^\n+/, '') + ((content || '').endsWith('\n') ? '' : '\n');
 }
 
-// Soron belüli formázás (félkövér, kiemelés, ikon, kód, link, dőlt).
+// Soron belüli formázás (félkövér, ikon, kód, link, dőlt).
+// A korábbi ==kiemelt szöveg== formázás megszűnt: a régi szövegekben a == jelek egyszerűen eltűnnek.
 function mdInline(t) {
   return t
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/==(.+?)==/g, '<span class="hl">$1</span>')
+    .replace(/==(.+?)==/g, '$1')
     .replace(/:([a-z][a-z0-9-]*):/g, '<span class="mdi" data-icon="$1" aria-hidden="true"></span>')
     .replace(/`(.+?)`/g, '<code>$1</code>')
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>')
@@ -60,11 +61,6 @@ function extractHeadings(content) {
 // ── Markdown → HTML ───────────────────────────────────────────────────────────
 function mdToHtml(md, opts) {
   if (!md) return '';
-  // showNotes: az élő előnézetben (renderPreview) true — ilyenkor a szerkesztői
-  // jegyzetek egy vizuálisan elkülönülő buborékban megjelennek. A végleges
-  // build/exportálásnál (buildAndDownload) nincs megadva, ezért false marad,
-  // és a jegyzetek egyáltalán nem kerülnek bele a legenerált oldalba.
-  const showNotes = !!(opts && opts.showNotes);
   // lines: az előnézetben minden blokk kap egy data-line="<sor>" attribútumot — ebből
   // tudja az előnézet, melyik szerkesztősorhoz tartozik (görgetés-szinkron, kattintás).
   const lineMap = !!(opts && opts.lines);
@@ -86,25 +82,18 @@ function mdToHtml(md, opts) {
     if (s === '<!-- shot-stack -->') { closeLists(); html.push('<figure class="shot shot-stack">'); shotStack=true; i++; continue; }
     if (s === '<!-- /shot-stack -->') { html.push('</figure>'); shotStack=false; i++; continue; }
 
-    // Szerkesztői jegyzet: <!-- jegyzet --> ... <!-- /jegyzet --> (több soros), vagy
-    // egy sorban: <!-- jegyzet: rövid szöveg -->. Az élő előnézetben (showNotes) egy
-    // elkülönülő buborékban látszik, de a végleges buildelt/exportált oldalra soha
-    // nem kerül bele — lásd a showNotes ág fölötti magyarázatot.
+    // Régi szerkesztői jegyzet (a funkció megszűnt): <!-- jegyzet --> ... <!-- /jegyzet -->
+    // vagy <!-- jegyzet: ... -->. Sehol nem jelenik meg — sem az előnézetben, sem a kész oldalon.
     if (s === '<!-- jegyzet -->') {
       closeLists();
-      const noteLines = [];
       i++;
-      while (i < lines.length && lines[i].trim() !== '<!-- /jegyzet -->') { noteLines.push(lines[i]); i++; }
+      while (i < lines.length && lines[i].trim() !== '<!-- /jegyzet -->') i++;
       if (i < lines.length) i++; // a záró <!-- /jegyzet --> sor átlépése
-      if (showNotes) {
-        html.push(`<div class="note-bubble"${L()}><div class="note-bubble-label">📝 Jegyzet</div>${mdToHtml(noteLines.join('\n'), {showNotes:true})}</div>`);
-      }
       continue;
     }
     const noteInline = s.match(/^<!--\s*jegyzet\s*:\s*([\s\S]*?)\s*-->$/);
     if (noteInline) {
       closeLists();
-      if (showNotes) html.push(`<div class="note-bubble"${L()}><div class="note-bubble-label">📝 Jegyzet</div><p>${inline(noteInline[1])}</p></div>`);
       i++; continue;
     }
 

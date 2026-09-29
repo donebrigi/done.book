@@ -5,7 +5,7 @@
 //   • "/" a sor elején (vagy szóköz után) → beszúró menü (címsor, harmonika, kép, ikon, ...)
 //   • ":ho" → ikon-javaslatok a Lucide készletből
 //   • a képhivatkozások helyén kis előnézeti címke látszik a hosszú útvonal helyett
-//   • a saját jelölések (harmonika, jegyzet, ==kiemelés==, :ikon:) színezve látszanak
+//   • a saját jelölések (harmonika, képsor, :ikon:) színezve látszanak
 //   • fejezetenként külön visszavonás-előzmény (Ctrl+Z)
 //
 // A CodeMirror a vendor/codemirror.bundle.js-ből jön (window.CM), build lépés nélkül.
@@ -30,7 +30,6 @@ function buildMarkerDecorations(view) {
       else if (/^#{1,5}\s/.test(t)) decos.push(D.line({ class: 'cm-kk-h cm-kk-h' + t.match(/^#+/)[0].length }).range(line.from));
       else if (t.startsWith('> ')) decos.push(D.line({ class: 'cm-kk-callout' }).range(line.from));
       if (line.length < 5000) {
-        for (const m of line.text.matchAll(/==(.+?)==/g)) decos.push(D.mark({ class: 'cm-kk-hl' }).range(line.from + m.index, line.from + m.index + m[0].length));
         for (const m of line.text.matchAll(/:([a-z][a-z0-9-]*):/g)) decos.push(D.mark({ class: 'cm-kk-icon' }).range(line.from + m.index, line.from + m.index + m[0].length));
       }
       pos = line.to + 1;
@@ -122,8 +121,6 @@ const SLASH_ITEMS = [
   { label: 'Ikon', detail: 'Lucide', keys: 'ikon icon', run: () => openIconPicker() },
   { label: 'Táblázat', detail: '| a | b |', keys: 'tablazat table', run: () => fmtTable() },
   { label: 'Link', detail: '[szöveg](url)', keys: 'link hivatkozas url', run: () => fmtLink() },
-  { label: 'Kiemelt szöveg', detail: '==szöveg==', keys: 'kiemeles highlight', run: () => fmtWrap('==', '==') },
-  { label: 'Jegyzet', detail: 'csak az előnézetben', keys: 'jegyzet note megjegyzes todo', run: () => fmtNote() },
   { label: 'Kódblokk', detail: '```', keys: 'kod code', run: () => fmtCodeBlock() },
 ];
 

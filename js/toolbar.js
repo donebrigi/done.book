@@ -79,11 +79,6 @@ function fmtAccordion() {
   edInsertBlock(block, '<!-- accordion -->\n+++ '.length);
 }
 
-function fmtNote() {
-  const block = '<!-- jegyzet -->\nIde írhatsz szerkesztői jegyzetet — ez nem kerül bele a végleges oldalba.\n<!-- /jegyzet -->\n';
-  edInsertBlock(block, '<!-- jegyzet -->\n'.length);
-}
-
 function fmtTable() {
   const block = '| Oszlop 1 | Oszlop 2 |\n|---|---|\n| érték | érték |\n';
   edInsertBlock(block, 2);

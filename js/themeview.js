@@ -1,5 +1,5 @@
 // ── Megjelenés oldal (projekt téma) ──────────────────────────────────────────
-// Teljes oldalas nézet: balra a beállítások (csak színek + pár méret), jobbra egy minta
+// Teljes oldalas nézet: balra a beállítások (logó + színek), jobbra egy minta
 // kézikönyv-oldal, amin MINDEN formázás megtalálható — így egy pillantással látszik,
 // mire hat egy-egy szín. A beállítás a projekt összes dokumentumára érvényes.
 
@@ -9,7 +9,7 @@ const TV = { projectId: null, projectName: '', vars: null, saved: null, logo: ''
 const THEME_SAMPLE = {
   intro: `# Minta kézikönyv
 
-Ez egy **minta oldal**: itt látszik, hogyan fognak kinézni a projekt dokumentumai. A bekezdésben van *dőlt*, **félkövér**, ==kiemelt szöveg==, \`kód\` és egy [belső link](#hasznalat).
+Ez egy **minta oldal**: itt látszik, hogyan fognak kinézni a projekt dokumentumai. A bekezdésben van *dőlt*, **félkövér**, \`kód\` és egy [belső link](#hasznalat).
 
 > Kiemelt doboz: fontos tudnivaló vagy figyelmeztetés a felhasználónak.
 
@@ -29,7 +29,7 @@ Ez egy **minta oldal**: itt látszik, hogyan fognak kinézni a projekt dokumentu
 3. Mentsd el a módosításokat :check:
 
 - Felsorolás első eleme
-- Második elem ==kiemeléssel==
+- Második elem egy ikonnal :star:
 
 ![Minta képernyőkép](SAMPLE_IMG)
 *Képaláírás a kép alatt*
@@ -72,7 +72,7 @@ function buildThemeSampleHtml(vars) {
       nav_groups: [{ name: 'Első lépések', sections: ['hasznalat', 'gyik'], subgroups: [] }] },
     fileOrder: ['01.md', '02.md', '03.md'], files, logo: TV.logo || ''
   };
-  return buildPreviewHtml(fake, buildAllSectionsHtml(fake, { showNotes: true }), true, composeThemeCss(v));
+  return buildPreviewHtml(fake, buildAllSectionsHtml(fake), true, composeThemeCss(v));
 }
 
 // ── Megnyitás / bezárás ──
@@ -198,19 +198,15 @@ function renderThemeForm() {
         ${f.auto ? `<button class="tf-auto" onclick="setThemeAuto('${f.key}')" title="Igazodjon ehhez: ${f.auto === 'accent' ? 'Kiemelő szín' : 'Szöveg'}" ${isAuto ? 'disabled' : ''}>auto</button>` : '<span class="tf-auto-spacer"></span>'}
       </div>`;
     });
-    if (g.title === 'Ikonok') {
-      html += `<div class="tf-row"><label>Ikonok mérete</label><input type="number" min="10" max="64" value="${v.iconSize}" oninput="onThemeNum('iconSize', this.value)" class="tf-num"/><span class="tf-unit">px</span><span></span></div>
-        <div class="tf-row"><label>Ikonok vonalvastagsága</label><input type="number" min="0.5" max="4" step="0.25" value="${v.iconStroke}" oninput="onThemeNum('iconStroke', this.value)" class="tf-num"/><span class="tf-unit">px</span><span></span></div>`;
-    }
     html += `</div>`;
   });
-  html += `<div class="tf-group"><div class="tf-title">Szöveg</div>
-    <div class="tf-row"><label>Bekezdés betűmérete</label><input type="number" min="12" max="24" value="${v.fsP}" oninput="onThemeNum('fsP', this.value)" class="tf-num"/><span class="tf-unit">px</span><span></span></div>
-  </div>`;
   html += `<div class="tf-group tf-fixed"><div class="tf-title">Egységes (nem állítható)</div>
     <div class="tf-note">Betűtípus: <b>Inter</b> (szöveg) + <b>Lexend</b> (címsorok)<br>
     Címsorméretek: Címsor 1–5 = ${THEME_FIXED.headingSizes.join(' / ')} px<br>
-    Sarkok lekerekítése: ${THEME_FIXED.radius}</div></div>`;
+    Sarkok lekerekítése: ${THEME_FIXED.radius}<br>
+    Bekezdés betűmérete: ${THEME_TEXT_SIZE} px<br>
+    Ikonok: a kiemelő szín, ${THEME_ICON.size} px<br>
+    Kiemelt doboz: a kiemelő színből, a szöveg színével</div></div>`;
   host.innerHTML = html;
 }
 
@@ -227,7 +223,6 @@ function onThemeColor(key, val) {
   onThemeChanged();
 }
 function onThemeHex(key, val) { if (isHexColor(val)) { const row = document.querySelector(`.tf-row[data-key="${key}"] input[type=color]`); if (row) row.value = val; onThemeColor(key, val); } }
-function onThemeNum(key, val) { TV.vars[key] = val; onThemeChanged(); }
 function setThemeAuto(key) { TV.vars[key] = null; renderThemeForm(); onThemeChanged(); }
 function refreshAutoSwatches() {
   document.querySelectorAll('.tf-row.is-auto').forEach(row => { row.querySelector('input[type=color]').value = themeColor(TV.vars, row.dataset.key); });
