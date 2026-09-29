@@ -23,3 +23,17 @@ export { JSZip };
 JS
 npx esbuild entry.js --bundle --minify --format=iife --global-name=CM --outfile=codemirror.bundle.js --legal-comments=eof
 ```
+
+---
+
+`html2pdf.bundle.min.js` — a **📄 PDF letöltése** funkcióhoz (js/pdf.js). Csak akkor töltődik be, amikor valaki PDF-et kér. A html2pdf.js 0.14.0 (MIT), a html2canvas helyett a **html2canvas-pro** (MIT) motorral, hogy a modern CSS-színek (`oklch`, `color-mix`) is működjenek; tartalmazza a jsPDF-et (MIT) és a DOMPurify-t (MPL-2.0 / Apache-2.0).
+
+Újragenerálás:
+
+```bash
+npm pack html2pdf.js@0.14.0 && tar xzf html2pdf.js-0.14.0.tgz
+npm i html2canvas-pro jspdf@4 dompurify esbuild
+cp -r package/src ./h2psrc
+echo "import html2pdf from './h2psrc/index.js'; window.html2pdf = html2pdf;" > entry.js
+npx esbuild entry.js --bundle --minify --format=iife --alias:html2canvas=html2canvas-pro --outfile=html2pdf.bundle.min.js
+```
