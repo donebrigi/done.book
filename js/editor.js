@@ -354,19 +354,26 @@ function onEditorDocChanged(text) {
 function onChapterTitleInput(value) {
   const f = currentFileEntry();
   if (!f || !editorView) return;
-  const oldTitle = f.meta.title || '';
   f.meta.title = value;
+  // A fejezet elején lévő „# Cím” sor is vele változik (akkor is, ha korábban eltért a címtől).
   const doc = editorView.state.doc;
-  for (let i = 1; i <= Math.min(doc.lines, 5); i++) {
-    const line = doc.line(i);
-    if (!line.text.trim()) continue;
-    if (line.text.trim() === '# ' + oldTitle) editorView.dispatch({ changes: { from: line.from, to: line.to, insert: '# ' + value } });
-    break;
-  }
+  const ln = firstHeadingLine(doc.toString());
+  if (ln >= 0 && value.trim()) { const line = doc.line(ln + 1); editorView.dispatch({ changes: { from: line.from, to: line.to, insert: '# ' + value } }); }
   f.dirty = true;
   scheduleAutosave();
   clearTimeout(_treeRefreshTimer);
   _treeRefreshTimer = setTimeout(() => { renderTree(); schedulePreview(); }, 300);
+}
+
+// A fejezet első nem üres sora, ha „# ” címsor (0-tól számozott sorindex), különben -1.
+function firstHeadingLine(text) {
+  const lines = (text || '').split('\n');
+  for (let i = 0; i < Math.min(lines.length, 8); i++) {
+    const t = lines[i].trim();
+    if (!t) continue;
+    return /^# \S/.test(t) || t === '#' ? i : -1;
+  }
+  return -1;
 }
 
 // Az azonosító (horgony / menühivatkozás) módosítása — ritkán kell, ezért kérdez.

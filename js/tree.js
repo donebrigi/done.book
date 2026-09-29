@@ -17,6 +17,9 @@ function renderTree() {
   const host = document.getElementById('file-list');
   const proj = currentProj();
   if (!host) return;
+  // Átnevezés közben nem rajzoljuk újra a fát (az automatikus mentés is hívja), különben
+  // eltűnne a szerkesztőmező — a befejezés után pótoljuk.
+  if (state._treeEditing) { state._treeRenderPending = true; return; }
   host.innerHTML = '';
   if (!proj) {
     host.innerHTML = '<div class="tree-empty">Nincs megnyitott dokumentum</div>';
@@ -42,9 +45,9 @@ function renderTree() {
         <button class="tree-btn del" title="Csoport törlése (a fejezetei megmaradnak)" data-act="del">🗑</button>
       </span>`;
     head.querySelector('.tree-caret').onclick = e => { e.stopPropagation(); toggleCollapsed(key); };
-    head.querySelector('.tree-group-name').ondblclick = () => promptRenameGroup(gi, null, g.name);
+    head.querySelector('.tree-group-name').ondblclick = e => { e.stopPropagation(); promptRenameGroup(gi, null, g.name, head.querySelector('.tree-group-name')); };
     head.querySelector('[data-act=addsub]').onclick = e => { e.stopPropagation(); addSubgroup(proj, gi); state.collapsedGroups[key] = false; afterTreeChange(); };
-    head.querySelector('[data-act=rename]').onclick = e => { e.stopPropagation(); promptRenameGroup(gi, null, g.name); };
+    head.querySelector('[data-act=rename]').onclick = e => { e.stopPropagation(); promptRenameGroup(gi, null, g.name, head.querySelector('.tree-group-name')); };
     head.querySelector('[data-act=del]').onclick = e => { e.stopPropagation(); if (confirm(`Törlöd a(z) "${g.name}" csoportot?\nA benne lévő fejezetek nem törlődnek, a lista tetejére kerülnek.`)) { removeGroup(proj, gi); afterTreeChange(); } };
     setupHeadDnD(head, { type: 'group', gi });
     box.appendChild(head);
@@ -64,8 +67,8 @@ function renderTree() {
             <button class="tree-btn del" title="Alcsoport törlése (a fejezetei a csoportban maradnak)" data-act="del">🗑</button>
           </span>`;
         shead.querySelector('.tree-caret').onclick = e => { e.stopPropagation(); toggleCollapsed(skey); };
-        shead.querySelector('.tree-group-name').ondblclick = () => promptRenameGroup(gi, si, sg.name);
-        shead.querySelector('[data-act=rename]').onclick = e => { e.stopPropagation(); promptRenameGroup(gi, si, sg.name); };
+        shead.querySelector('.tree-group-name').ondblclick = e => { e.stopPropagation(); promptRenameGroup(gi, si, sg.name, shead.querySelector('.tree-group-name')); };
+        shead.querySelector('[data-act=rename]').onclick = e => { e.stopPropagation(); promptRenameGroup(gi, si, sg.name, shead.querySelector('.tree-group-name')); };
         shead.querySelector('[data-act=del]').onclick = e => { e.stopPropagation(); if (confirm(`Törlöd a(z) "${sg.name}" alcsoportot?\nA fejezetei a csoportban maradnak.`)) { removeSubgroup(proj, gi, si); afterTreeChange(); } };
         setupHeadDnD(shead, { type: 'subgroup', gi, si });
         sbox.appendChild(shead);
@@ -123,11 +126,16 @@ function renderChapterItem(proj, fn, addr, index) {
   const broken = brokenLinksIn(f.content);
   item.innerHTML = `<span class="tree-ch-title">${escapeHtml(chapterTitle(proj, fn))}</span>${broken.length ? `<span class="tree-warn" title="${broken.length} nem létező belső hivatkozás: ${escapeHtml(broken.map(b => '#' + b).join(', '))}">⚠</span>` : ''}
     <span class="tree-actions">
+      <button class="tree-btn" title="Átnevezés (vagy dupla kattintás a címen)" data-act="rename">✏</button>
       <button class="tree-btn" title="Letöltés .md fájlként (a képek beágyazva)" data-act="dl">⬇</button>
       <button class="tree-btn del" title="Fejezet törlése" data-act="del">🗑</button>
     </span>`;
   item.onclick = () => { if (fn !== state.currentFile) openFile(fn); };
   item.querySelector('[data-act=dl]').onclick = e => { e.stopPropagation(); downloadChapterMarkdown(fn); };
+  const titleEl = item.querySelector('.tree-ch-title');
+  const renameCh = e => { e.stopPropagation(); startInlineRename(item.querySelector('.tree-ch-title'), chapterTitle(proj, fn), name => renameChapter(proj, fn, name)); };
+  item.querySelector('[data-act=rename]').onclick = renameCh;
+  titleEl.ondblclick = renameCh;
   item.querySelector('[data-act=del]').onclick = e => { e.stopPropagation(); deleteChapter(fn); };
 
   item.addEventListener('dragstart', e => {
@@ -232,11 +240,49 @@ function afterTreeChange() {
   schedulePreview();
 }
 
-function promptRenameGroup(gi, si, current) {
-  const name = prompt(si == null ? 'Csoport neve:' : 'Alcsoport neve:', current);
-  if (!name || !name.trim() || name.trim() === current) return;
-  renameGroup(currentProj(), gi, si, name.trim());
-  afterTreeChange();
+// Csoport / alcsoport átnevezése helyben (a fában megjelenő szerkesztőmezővel — nem
+// felugró ablakkal, mert azt a böngésző letilthatja, és akkor „nem történik semmi”).
+function promptRenameGroup(gi, si, current, nameEl) {
+  const proj = currentProj();
+  const commit = name => {
+    if (!name || name === current) return;
+    renameGroup(proj, gi, si, name);
+    afterTreeChange();
+  };
+  if (nameEl) startInlineRename(nameEl, current, commit);
+  else { const n = prompt(si == null ? 'Csoport neve:' : 'Alcsoport neve:', current); if (n != null) commit(n.trim()); }
+}
+
+// Helyben szerkesztés: a név helyére egy beviteli mező kerül. Enter / kattintás máshova = mentés, Esc = mégse.
+function startInlineRename(nameEl, current, onCommit) {
+  if (state._treeEditing) return;
+  state._treeEditing = true;
+  const row = nameEl.closest('[draggable]');
+  if (row) row.draggable = false;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'tree-rename-input';
+  input.value = current;
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+  let done = false;
+  const finish = save => {
+    if (done) return;
+    done = true;
+    const val = input.value.trim();
+    state._treeEditing = false;
+    state._treeRenderPending = false;
+    if (save && val && val !== current) onCommit(val);
+    else renderTree();
+  };
+  input.addEventListener('keydown', e => {
+    e.stopPropagation();
+    if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+  });
+  input.addEventListener('blur', () => finish(true));
+  ['click', 'dblclick', 'mousedown'].forEach(ev => input.addEventListener(ev, e => e.stopPropagation()));
 }
 
 function addGroupFromSidebar() {
@@ -327,4 +373,27 @@ async function createNewChapter() {
   schedulePreview();
   toast(ok ? '✓ Fejezet létrehozva: ' + title : '⚠ A fejezet létrejött, de a mentés nem sikerült — újrapróbálom', ok ? 'ok' : 'err');
   if (!ok) scheduleAutosave();
+}
+
+// Fejezet átnevezése (a fából). A fejezet elején lévő „# Cím” sor is vele változik.
+function renameChapter(proj, fn, name) {
+  const f = proj.files[fn];
+  if (!f || !name) return;
+  f.meta.title = name;
+  if (fn === state.currentFile && editorView) {
+    const doc = editorView.state.doc;
+    const ln = firstHeadingLine(doc.toString());
+    if (ln >= 0) { const line = doc.line(ln + 1); editorView.dispatch({ changes: { from: line.from, to: line.to, insert: '# ' + name } }); }
+    updateChapterHeader();
+  } else {
+    const lines = (f.content || '').split('\n');
+    const ln = firstHeadingLine(f.content || '');
+    if (ln >= 0) { lines[ln] = '# ' + name; f.content = lines.join('\n'); }
+    _editorStates.delete(fn); // a megőrzött szerkesztő-állapot már elavult
+  }
+  f.dirty = true;
+  scheduleAutosave();
+  renderTree();
+  schedulePreview();
+  toast('✓ Fejezet átnevezve');
 }

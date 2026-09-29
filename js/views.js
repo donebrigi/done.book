@@ -72,7 +72,7 @@ async function showHomeView() {
     state.homeProjects = await cloudListTopProjects();
   } finally { setHomeRefreshing(false); }
   syncHomeFolderMeta(true);
-  if (state.uiView === 'home') renderHomeGrid();
+  if (state.uiView === 'home') { renderHomeGrid(); maybeAutoTour('home'); }
 }
 
 // Kis „frissítés…” jelzés a Kezdőlapon, amíg a háttérben töltődik a friss lista.
