@@ -151,7 +151,7 @@ function renderIconPickerGrid(query) {
   matches.forEach(ic => {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'icon-opt';
+    btn.className = 'icon-opt icon-pick';
     btn.style.cssText = 'width:100%;height:56px;flex-direction:column;gap:3px;font-size:9px;padding:4px;line-height:1.1';
     btn.title = ic.name;
     btn.innerHTML = `<img src="${LUCIDE_ICON_URL(ic.name)}" alt="" style="width:20px;height:20px" loading="lazy"/><span style="max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ic.name}</span>`;

@@ -119,9 +119,8 @@ document.addEventListener('click', (e) => {
 document.getElementById('topbar').addEventListener('scroll', () => { closeDownloadMenu(); closeProfileMenu(); });
 window.addEventListener('resize', () => { closeDownloadMenu(); closeProfileMenu(); });
 async function confirmDownload() {
-  const optimize = document.getElementById('dl-optimize-images').checked;
   closeDownloadMenu();
-  await buildAndDownload(optimize);
+  await buildAndDownload();
 }
 async function confirmPrint() {
   closeDownloadMenu();

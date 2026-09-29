@@ -102,6 +102,9 @@ main h4{color:${c('h3Color')}}
 main h5{color:${c('h4Color')}}
 main h6{color:${c('h5Color')}}
 .brand h1{color:${v.accent}}
+.brand-logo{display:flex;align-items:center;gap:12px}
+.brand-logo h1{margin:0;min-width:0;overflow-wrap:anywhere}
+.brand-img{max-height:40px;max-width:40%;width:auto;display:block;flex-shrink:0}
 .mdi svg{width:${ic.size}px;height:${ic.size}px;stroke:${v.accent};stroke-width:${ic.stroke};color:${v.accent}}
 ` + MADE_BY_CSS;
 }

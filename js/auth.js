@@ -59,9 +59,8 @@ supabaseClient.auth.onAuthStateChange((_event, session) => updateAuthUI(session)
 // ── Megosztható Dokumentum-link (#view/{projektId}/{dokumentumId}) ──
 // Csak bejelentkezett felhasználónak nyílik meg — lásd updateAuthUI, ahol a
 // bejelentkezés-utáni átirányítás a Kezdőlap helyett ide vezet, ha a hash ilyen
-// linket tartalmaz. A megnyitott tartalom mindig a legutóbbi "⬇ Letöltés"-sel
-// mentett HTML (lásd PUBLISH_HTML_NAME), tehát nem kell külön linket generálni
-// minden módosítás után.
+// linket tartalmaz. A megnyitott tartalom mindig a dokumentum AKTUÁLIS állapota
+// (megnyitáskor állítjuk össze a felhőben lévő fejezetekből) — nem kell semmit generálni.
 function parseSharedViewHash() {
   const h = location.hash || '';
   const m = h.match(/^#view\/([^/]+)\/([^/]+)$/);
@@ -74,15 +73,16 @@ function getDocShareUrl(projectId, docId) {
 }
 async function openSharedView(projectId, docId) {
   toast('☁️ Kézikönyv betöltése...', 'ok', 2500);
-  const html = await cloudDownloadText(projectId + '/' + docId + '/' + PUBLISH_HTML_NAME);
-  if (!html) {
-    toast('⚠ Ehhez a Dokumentumhoz még nincs legenerálva HTML — nyisd meg a szerkesztőben, és kattints a Letöltésre.', 'err', 6000);
+  const proj = await loadDocForExport(projectId, docId);
+  if (!proj) {
+    toast('⚠ Ez a dokumentum nem található (lehet, hogy törölték vagy áthelyezték).', 'err', 6000);
     location.hash = '';
     showHomeView();
     return;
   }
-  // A teljes oldal tartalmát lecseréljük a legenerált kézikönyvre — ugyanúgy, mintha
-  // közvetlenül azt a HTML fájlt nyitottad volna meg.
+  const html = await buildDocHtml(proj);
+  // A teljes oldal tartalmát lecseréljük a kész kézikönyvre — ugyanúgy, mintha
+  // közvetlenül a letöltött HTML fájlt nyitottad volna meg.
   document.open();
   document.write(html);
   document.close();
@@ -100,23 +100,6 @@ async function copyDocShareLink(projectId, docId) {
   } catch(e) {
     window.prompt('Másold ki a linket:', url);
   }
-}
-async function downloadPublishedHtml(projectId, docId, title) {
-  toast('☁️ Letöltés előkészítése...', 'ok', 2000);
-  const html = await cloudDownloadText(projectId + '/' + docId + '/' + PUBLISH_HTML_NAME);
-  if (!html) {
-    toast('⚠ Ehhez a Dokumentumhoz még nincs legenerálva HTML — nyisd meg a szerkesztőben, és kattints a Letöltésre.', 'err', 6000);
-    return;
-  }
-  const blob = new Blob([html], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = (slugify(title) || docId) + '.html';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 async function cloudLogin() {

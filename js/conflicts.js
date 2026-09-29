@@ -78,7 +78,7 @@ async function resolveConflict(choice) {
     // Kifejezetten felülírást kértél: nincs újabb ellenőrzés (különben a kolléga
     // közbeni automatikus mentése miatt a kérdés végtelenül ismétlődhetne).
     const ok = await saveChapter(proj, fn, { force: true });
-    toast(ok ? '✓ A te változatod mentve' : '⚠ A mentés nem sikerült — próbáld újra a 💾 Mentés gombbal', ok ? 'ok' : 'err', ok ? 2500 : 5000);
+    toast(ok ? '✓ A te változatod mentve' : '⚠ A mentés nem sikerült — próbáld újra (Ctrl+S)', ok ? 'ok' : 'err', ok ? 2500 : 5000);
   } else if (choice === 'theirs') {
     f.conflict = false;
     applyRemoteChapter(proj, fn, remoteRaw);
@@ -105,7 +105,7 @@ async function resolveConflict(choice) {
 }
 
 // Ha egy fejezet ütközésre vár, de az ablak valamiért nem látszik: újra megnyitjuk.
-// (A 💾 Mentés gomb és a "⚠ Ütközés" állapotfelirat is ezt hívja.)
+// (A Ctrl+S és a "⚠ Ütközés" állapotfelirat is ezt hívja.)
 async function reopenPendingConflicts() {
   const proj = currentProj();
   if (!proj) return false;

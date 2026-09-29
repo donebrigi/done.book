@@ -148,7 +148,7 @@ function buildPreviewHtml(proj, mainContent, full, cssOverride) {
   const title = proj.config.title || 'Előnézet';
   const subtitle = proj.config.subtitle || title;
   const description = proj.config.description || '';
-  const logoTag = proj.logo ? `<img src="${proj.logo}" alt="${proj.config.logo_alt||''}" style="max-height:40px;display:block"/>` : '';
+  const logoTag = proj.logo ? `<img class="brand-img" src="${proj.logo}" alt="${escapeHtml(proj.config.logo_alt||'')}"/>` : '';
   const navHtml = full ? buildNavHtml(proj) : '';
   const wrapStyle = full ? '' : 'grid-template-columns:1fr;';
   const searchBar = full ? `
@@ -184,8 +184,7 @@ ${fontLinkTag}
 ${full ? `<aside>
   <div class="aside-top">
     <div class="brand">
-      <div class="brand-logo">${logoTag}</div>
-      <h1>${subtitle}</h1>
+      <div class="brand-logo">${logoTag}<h1>${subtitle}</h1></div>
       <p>${description}</p>
     </div>
     ${searchBar}

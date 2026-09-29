@@ -45,7 +45,6 @@ const isCloudFile = e => e.id !== null;
 // hogy a proj.config.output (helyi mappa módban használt, a felhasználó által is
 // átnevezhető) fájlnévvel is elmenti — ez egy fix nevű, mindig a legutóbbi build-et
 // tartalmazó másolat, amire a megosztható link és a gyors letöltés gomb épül.
-const PUBLISH_HTML_NAME = 'published.html';
 
 
 // ── Storage segédfüggvények ──
@@ -81,16 +80,12 @@ async function cloudSaveConfig(proj) {
   if (!proj.cloudFolder) return true;
   return cloudUpload(proj.cloudFolder + '/config.json', serializeConfig(proj), 'application/json');
 }
-async function cloudSaveOutput(proj, outputName, html) {
-  if (!proj.cloudFolder) return true;
-  return cloudUpload(proj.cloudFolder + '/' + outputName, html, 'text/html');
-}
 
 // ── Felhő: Projekt (top-szint) és Dokumentum (Projekten belüli kézikönyv) hierarchia ──
 // Tárolási szerkezet a Supabase Storage bucket-ben:
 //   {projektId}/_project.json              — Projekt metaadat (név, leírás, szín, ikon)
 //   {projektId}/{dokumentumId}/config.json — cím, menü, fejezetsorrend
-//   {projektId}/{dokumentumId}/style.css, logo.txt, sections/*.md, published.html
+//   {projektId}/{dokumentumId}/style.css, logo.txt, sections/*.md
 // Egy megnyitott Dokumentumnál proj.cloudFolder = "{projektId}/{dokumentumId}".
 
 const PROJECT_COLORS = ['#7c6af7', '#4ade80', '#fbbf24', '#f87171', '#38bdf8', '#f472b6', '#fb923c', '#94a3b8'];

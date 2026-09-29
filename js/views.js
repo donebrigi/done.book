@@ -125,7 +125,8 @@ function renderHomeList() {
           <button class="btn primary btn-xs" data-act="open">Megnyitás</button>
           <button class="btn-sm" data-act="rename" title="Átnevezés">✏</button>
           <button class="btn-sm" data-act="move" title="Áthelyezés másik projektbe">➡️</button>
-          <button class="btn-sm" data-act="html" title="A legutóbb publikált HTML letöltése">⬇ HTML</button>
+          <button class="btn-sm" data-act="html" title="A kész kézikönyv letöltése HTML-ben (mindig az aktuális állapot)">⬇ HTML</button>
+          <button class="btn-sm" data-act="pdf" title="Nyomtatás / PDF — a nyomtatóablakban válaszd a „Mentés PDF-ként” lehetőséget">🖨 PDF</button>
           <button class="btn-sm" data-act="link" title="Megosztható link másolása">🔗</button>
           <button class="btn-sm del" data-act="del" title="Törlés">🗑</button>
         </td>
@@ -139,7 +140,8 @@ function renderHomeList() {
       else if (act === 'project') showProjectView(p.id);
       else if (act === 'rename') renameDocInProject(p.id, d.id, d.title);
       else if (act === 'move') openMoveDocModal(p.id, d.id, d.title);
-      else if (act === 'html') downloadPublishedHtml(p.id, d.id, d.title);
+      else if (act === 'html') downloadDocHtml(p.id, d.id);
+      else if (act === 'pdf') printDoc(p.id, d.id);
       else if (act === 'link') copyDocShareLink(p.id, d.id);
       else if (act === 'del') deleteDocInProject(p.id, d.id, d.title);
     });
@@ -230,30 +232,31 @@ function renderProjectDocGrid() {
     docs.forEach(d => {
       const openDoc = () => cloudLoadProject(projectId + '/' + d.id, projectId, d.id);
       const card = document.createElement('div');
-      card.className = 'hp-card hp-doc-card';
+      card.className = 'hp-card';
       card.onclick = openDoc;
-      const metaBits = [d.chapterCount + ' fejezet'];
-      if (d.updatedAt) metaBits.push('frissítve ' + formatRelativeDate(d.updatedAt));
+      const meta = d.updatedAt ? 'frissítve ' + formatRelativeDate(d.updatedAt) : '';
+      const pc = (state.currentTopProjectMeta && state.currentTopProjectMeta.color) || 'var(--accent)';
       card.innerHTML = `
-        <div class="hp-doc-top">
-          <div class="hp-card-icon">📘</div>
-          <div class="hp-doc-body">
-            <div class="hp-doc-title" title="${escapeHtml(d.title)}">${escapeHtml(d.title)}</div>
-            <div class="hp-doc-meta">${escapeHtml(metaBits.join(' · '))}</div>
-          </div>
+        <div class="hp-count" style="background:color-mix(in srgb, ${pc} 14%, transparent);color:${pc}" title="${d.chapterCount} fejezet">${d.chapterCount}</div>
+        <div class="hp-card-head">
+          <div class="hp-card-icon" style="background:var(--bg3);color:var(--text2)">📘</div>
+          <div class="hp-card-title" title="${escapeHtml(d.title)}">${escapeHtml(d.title)}</div>
         </div>
+        <div class="hp-card-desc">${escapeHtml(meta)}</div>
         <div class="hp-actions-row">
-          <button class="btn-sm hp-doc-edit-btn" title="Dokumentum átnevezése">✏ Szerkesztés</button>
-          <button class="btn-sm hp-doc-move-btn" title="Áthelyezés másik projektbe">➡️ Áthelyezés</button>
-          <button class="btn-sm hp-doc-dl-btn" title="A legutóbb legenerált HTML letöltése — szerkesztő megnyitása nélkül">⬇ HTML</button>
-          <button class="btn-sm hp-doc-link-btn" title="Megosztható link másolása (csak bejelentkezett felhasználók nyithatják meg)">🔗 Link</button>
-          <button class="btn-sm del hp-doc-del-btn" title="Dokumentum törlése">🗑 Törlés</button>
+          <button class="btn-sm hp-doc-edit-btn" title="Átnevezés">✏</button>
+          <button class="btn-sm hp-doc-move-btn" title="Áthelyezés másik projektbe">➡️</button>
+          <button class="btn-sm hp-doc-dl-btn" title="A kész kézikönyv letöltése HTML-ben (mindig az aktuális állapot)">HTML</button>
+          <button class="btn-sm hp-doc-pdf-btn" title="Nyomtatás / PDF — a nyomtatóablakban válaszd a „Mentés PDF-ként” lehetőséget">PDF</button>
+          <button class="btn-sm hp-doc-link-btn" title="Megosztható link másolása (csak bejelentkezett felhasználók nyithatják meg)">🔗</button>
+          <button class="btn-sm del hp-doc-del-btn" title="Dokumentum törlése">🗑</button>
           <button class="btn primary hp-doc-open-btn">Megnyitás</button>
         </div>
       `;
       card.querySelector('.hp-doc-edit-btn').onclick = (e) => { e.stopPropagation(); renameDocInProject(projectId, d.id, d.title); };
       card.querySelector('.hp-doc-move-btn').onclick = (e) => { e.stopPropagation(); openMoveDocModal(projectId, d.id, d.title); };
-      card.querySelector('.hp-doc-dl-btn').onclick = (e) => { e.stopPropagation(); downloadPublishedHtml(projectId, d.id, d.title); };
+      card.querySelector('.hp-doc-dl-btn').onclick = (e) => { e.stopPropagation(); downloadDocHtml(projectId, d.id); };
+      card.querySelector('.hp-doc-pdf-btn').onclick = (e) => { e.stopPropagation(); printDoc(projectId, d.id); };
       card.querySelector('.hp-doc-link-btn').onclick = (e) => { e.stopPropagation(); copyDocShareLink(projectId, d.id); };
       card.querySelector('.hp-doc-del-btn').onclick = (e) => { e.stopPropagation(); deleteDocInProject(projectId, d.id, d.title); };
       card.querySelector('.hp-doc-open-btn').onclick = (e) => { e.stopPropagation(); openDoc(); };

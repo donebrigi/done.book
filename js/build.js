@@ -1,25 +1,62 @@
 // ── Build: a végleges, önálló HTML ───────────────────────────────────────────
-async function buildAndDownload(optimize = false) {
+//
+// Nincs külön „legenerált” / publikált változat: a kész HTML-t mindig a felhőben lévő
+// aktuális fejezetekből állítjuk össze, amikor kell (letöltés, PDF, megosztott link,
+// ⬇ HTML a listákban). Így mindig naprakész, nem kell kézzel újragenerálni.
+
+// Egy dokumentum betöltése exportáláshoz (a szerkesztő állapotát nem érinti).
+// Ha éppen ez van megnyitva, a memóriában lévő (legfrissebb) változatot használjuk.
+async function loadDocForExport(projectId, docId) {
+  const folder = projectId + '/' + docId;
+  const open = currentProj();
+  if (open && open.cloudFolder === folder) {
+    if (hasUnsavedWork()) await saveAllDirty({ quiet: true });
+    return open;
+  }
+  const data = await cloudFetchDocument(folder);
+  if (!data || (!data.configText && !Object.keys(data.files || {}).length)) return null;
+  const proj = { name: folder, cloudFolder: folder, topProjectId: projectId, docId,
+    config: data.config || {}, files: {}, fileOrder: [] };
+  proj.themeVars = await resolveDocTheme(projectId, data.css);
+  proj.logo = await resolveDocLogo(projectId, data.logo);
+  for (const [fn, raw] of Object.entries(data.files)) {
+    const f = makeFileEntry(raw);
+    ensureChapterMeta(fn, f);
+    proj.files[fn] = f;
+  }
+  normalizeStructure(proj);
+  return proj;
+}
+
+// A kész, önálló HTML (képek beágyazva).
+async function buildDocHtml(proj) {
+  const html = buildPreviewHtml(proj, buildAllSectionsHtml(proj), true);
+  return resolveImagesBuild(html, proj);
+}
+
+function docFileName(proj) {
+  return proj.config.output || ((slugify(projectDisplayTitle(proj)) || proj.docId) + '.html');
+}
+
+// Szerkesztőből: a megnyitott dokumentum letöltése.
+async function buildAndDownload() {
   const proj = currentProj();
   if (!proj) { toast('Nincs megnyitott dokumentum!', 'err'); return; }
-
   await saveAllDirty({ quiet: true });
-
   toast('⚙ HTML összeállítása...', 'ok', 3000);
-  let html = buildPreviewHtml(proj, buildAllSectionsHtml(proj), true);
-  // A képek beágyazása (data: URI), hogy a letöltött HTML önmagában is teljes legyen.
-  html = await resolveImagesBuild(html, proj);
-  const outputName = proj.config.output || (proj.docId + '.html');
+  const html = await buildDocHtml(proj);
+  downloadText(html, docFileName(proj), 'text/html');
+  toast(`✓ HTML letöltve (${Math.round(html.length / 1024)} KB)`, 'ok', 3000);
+}
 
-  if (optimize) {
-    toast('Képek optimalizálása...', 'ok', 4000);
-    html = await optimizeHtmlImages(html);
-  }
-
-  // A felhőbe is felkerül: erre épül a megosztható link és a Projekt nézet ⬇ HTML gombja.
-  const ok = await cloudSaveOutput(proj, PUBLISH_HTML_NAME, html);
-  downloadText(html, outputName, 'text/html');
-  toast(ok ? `✓ HTML letöltve és publikálva (${Math.round(html.length / 1024)} KB)` : '⚠ HTML letöltve, de a felhőbe publikálás nem sikerült', ok ? 'ok' : 'err', 3500);
+// Listákból / kártyákról: bármelyik dokumentum letöltése, a szerkesztő megnyitása nélkül.
+async function downloadDocHtml(projectId, docId) {
+  toast('⚙ HTML összeállítása...', 'ok', 3000);
+  const proj = await loadDocForExport(projectId, docId);
+  if (!proj) { toast('⚠ A dokumentum nem tölthető be.', 'err'); return; }
+  const html = await buildDocHtml(proj);
+  downloadText(html, docFileName(proj), 'text/html');
+  toast(`✓ HTML letöltve (${Math.round(html.length / 1024)} KB)`, 'ok', 3000);
 }
 
 // ── Nyomtatás / PDF ──────────────────────────────────────────────────────────
@@ -28,12 +65,17 @@ async function buildAndDownload(optimize = false) {
 async function printDocument() {
   const proj = currentProj();
   if (!proj) return;
+  await printDoc(proj.topProjectId, proj.docId);
+}
+
+async function printDoc(projectId, docId) {
+  // Az új lapot azonnal (a kattintásra) nyitjuk meg, különben a böngésző blokkolná.
   const win = window.open('', '_blank');
   if (!win) { toast('A böngésző blokkolta az új lapot — engedélyezd a felugró ablakokat.', 'err', 5000); return; }
   win.document.write('<p style="font-family:sans-serif;padding:40px">Nyomtatási nézet előkészítése…</p>');
-  await saveAllDirty({ quiet: true });
-  let html = buildPreviewHtml(proj, buildAllSectionsHtml(proj), true);
-  html = await resolveImagesBuild(html, proj);
+  const proj = await loadDocForExport(projectId, docId);
+  if (!proj) { win.close(); toast('⚠ A dokumentum nem tölthető be.', 'err'); return; }
+  const html = await buildDocHtml(proj);
   win.document.open(); win.document.write(html); win.document.close();
   // Megvárjuk a képeket, a betűtípusokat és az ikonokat, mielőtt a nyomtatás elindul.
   const imgs = [...win.document.images].filter(i => !i.complete).map(i => new Promise(r => { i.onload = i.onerror = r; }));
@@ -42,6 +84,7 @@ async function printDocument() {
   // Ebben a nyomtatási lapon a lenyíló elemek eleve nyitva vannak (a letöltött HTML-ben ezt
   // a beágyazott PRINT_JS intézi nyomtatáskor).
   win.document.querySelectorAll('details').forEach(d => { d.open = true; });
+  win.document.title = projectDisplayTitle(proj);
   setTimeout(() => { win.focus(); win.print(); }, 700);
 }
 
@@ -78,49 +121,3 @@ async function downloadMarkdownZip() {
   toast(`✓ ZIP letöltve (${proj.fileOrder.length} fejezet, ${imagePaths.size} kép)`);
 }
 
-// ── HTML kép optimalizáló (Canvas API alapú, WebP konverzió) ─────────────────
-async function optimizeHtmlImages(html) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const imgs = doc.querySelectorAll('img[src^="data:image/"]');
-  const MAX_WIDTH = 1440;
-  const QUALITY = 0.85;
-
-  for (const img of imgs) {
-    try {
-      const src = img.src;
-      const mime = src.split(';')[0].split(':')[1];
-      if (mime === 'image/webp') continue; // már optimált
-
-      const origSize = src.length;
-
-      // Load image
-      const bitmap = await createImageBitmap(await fetch(src).then(r => r.blob()));
-
-      // Calculate new dimensions
-      let w = bitmap.width, h = bitmap.height;
-      if (w > MAX_WIDTH) {
-        h = Math.round(h * MAX_WIDTH / w);
-        w = MAX_WIDTH;
-      }
-
-      // Draw to canvas
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(bitmap, 0, 0, w, h);
-
-      // Convert to WebP
-      const newSrc = canvas.toDataURL('image/webp', QUALITY);
-
-      // Only use if smaller
-      if (newSrc.length < origSize) {
-        img.src = newSrc;
-      }
-    } catch(e) {
-      console.warn('Image optimize failed:', e);
-    }
-  }
-
-  return '<!DOCTYPE html>' + doc.documentElement.outerHTML;
-}
