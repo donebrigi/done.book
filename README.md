@@ -58,7 +58,7 @@ Bal oldalt a fejezetek fája, középen a szerkesztő, jobbra az élő előnéze
 
 - **Cím mező** a szerkesztő fölött: a fejezet címe, egyben a menüpont neve. Ha a fejezet első sora `# <cím>`, azt is együtt frissíti.
 - **#azonosító** a cím mellett: a fejezet horgonya (`#azonosito` linkekhez). Automatikusan készül, kattintással módosítható.
-- **„/” menü:** a sor elején (vagy szóköz után) írj egy `/` jelet — megjelenik a beszúrható elemek listája (címsor, lista, kiemelt doboz, harmonika, kép, képsor, ikon, táblázat, link, jegyzet, kódblokk). Gépeléssel szűrhető (pl. `/harm`), Enterrel beszúrható.
+- **„/” menü:** a sor elején (vagy szóköz után) írj egy `/` jelet — megjelenik a beszúrható elemek listája (címsor, lista, kiemelt doboz, harmonika, kép, képsor, ikon, táblázat, link, kódblokk). Gépeléssel szűrhető (pl. `/harm`), Enterrel beszúrható.
 - **Ikon-javaslat:** kettősponttal kezdve (pl. `:hou`) felajánlja a Lucide ikonokat.
 - **Billentyűk:** Ctrl+B félkövér, Ctrl+I dőlt, Ctrl+K link, Ctrl+S mentés, Ctrl+Z / Ctrl+Y visszavonás (fejezetenként külön), Ctrl+F keresés.
 - **Gyors dokumentumváltó:** a felső sávban, a 🏠 Kezdőlap gomb mellett egy lenyíló lista mutatja az összes dokumentumot projektenként csoportosítva — innen egy kattintással átválthatsz egy másikra (a mentetlen módosítások előtte felmennek a felhőbe).
@@ -101,7 +101,6 @@ A szerkesztő egy leegyszerűsített markdown-változatot ért. Az eszköztár g
 |---|---|---|
 | Félkövér | `**szöveg**` | |
 | Dőlt | `*szöveg*` | |
-| Kiemelt szöveg | `==szöveg==` | színe a projekt Megjelenés oldalán állítható |
 | Kód (inline) | `` `kód` `` | |
 | Címsor 1 | `# Cím` | HTML-ben `<h2>`, automatikusan kap egy hivatkozható azonosítót |
 | Címsor 2 | `## Cím` | HTML-ben `<h3>` |
@@ -118,7 +117,6 @@ A szerkesztő egy leegyszerűsített markdown-változatot ért. Az eszköztár g
 | Táblázat | markdown táblázat (`\|` és `---`) | |
 | Lenyíló elem (harmonika) | lásd lent | |
 | Ikon | `:ikon-nev:` | lásd lent |
-| Szerkesztői jegyzet | `<!-- jegyzet -->` ... `<!-- /jegyzet -->` | lásd lent |
 
 ### Hivatkozás egy címsorra
 
@@ -160,23 +158,9 @@ Az eszköztár **🧩 Ikon** gombja egy kereshető ikonválasztót nyit meg (a [
 
 jelölést szúr be a szövegbe (pl. `:house:`), ami egy valódi, az oldalba ágyazott SVG-vé alakul mind az előnézetben, mind a végleges buildelt oldalon (nem egy külső képfájl — ezért lehet a megjelenését CSS-ből, azaz a projekt Megjelenés oldaláról is szabályozni).
 
-Az ikonok kinézete a projekt Megjelenés oldalán, az "Ikonok" mezőknél állítható: szín, méret és vonalvastagság. Alapból a szöveg színét, 20px méretet és 2px vonalvastagságot kapnak.
+Az ikonok színe mindig a projekt **kiemelő színe** (Megjelenés oldal), méretük 20 px, vonalvastagságuk 2 px — ez nem állítható.
 
 **Fontos:** az ikonok (és az ikonlista is) egy külső CDN-ről (unpkg.com) töltődnek be futásidőben — ehhez internetkapcsolat kell, ugyanúgy, mint a Google Fonts betűtípusokhoz. Ha valaki teljesen internet nélkül nyitja meg a végleges oldalt, az ikonok helyén üres hely marad.
-
-### Szerkesztői jegyzet
-
-Az eszköztár **📝 Jegyzet** gombja egy rejtett, csak a szerkesztőnek szóló jegyzetet szúr be:
-
-```
-<!-- jegyzet -->
-Ide írhatsz szerkesztői jegyzetet.
-<!-- /jegyzet -->
-```
-
-Rövidebb megjegyzéshez egysoros forma is használható: `<!-- jegyzet: rövid szöveg -->`.
-
-A jegyzet az **élő előnézetben** egy szaggatott keretű, elkülönülő buborékban jelenik meg ("📝 Jegyzet" felirattal) — de a letöltött, végleges oldalra soha nem kerül bele. Ez pl. saját emlékeztetőkhöz, TODO-khoz, vagy a szerkesztőtársaknak szánt megjegyzésekhez hasznos.
 
 ---
 
@@ -195,17 +179,16 @@ A megjelenés **projekt szinten** állítható: egy projekt minden dokumentuma u
 - a projekt oldalán a **🎨 Megjelenés** gombbal,
 - vagy a szerkesztőben a topbar **🎨 Megjelenés** gombjával (a megnyitott dokumentum projektjéé).
 
-Az oldalon balra a beállítások, jobbra egy **minta oldal** látszik, amin minden formázás megtalálható (címsorok, bekezdés, kiemelések, kiemelt doboz, listák, kép, táblázat, harmonika, kód, ikonok, menü, kereső) — minden módosítás rögtön látszik rajta. A **✓ Mentés** után a projekt összes dokumentuma az új megjelenést kapja.
+Az oldalon balra a beállítások, jobbra egy **minta oldal** látszik, amin minden formázás megtalálható (címsorok, bekezdés, kiemelt doboz, listák, kép, táblázat, harmonika, kód, ikonok, menü, kereső) — minden módosítás rögtön látszik rajta. A **✓ Mentés** után a projekt összes dokumentuma az új megjelenést kapja.
 
 **Logó:** a Megjelenés oldal tetején tölthető fel / cserélhető / távolítható el (PNG, SVG, JPG, max. 1 MB). A projekt minden dokumentumában a bal oldali menü tetején jelenik meg, és a minta oldalon is látszik. Ha egy projektnek még nincs saját logója, az első olyan dokumentum logójából indul, amelyiknek volt; a Mentéssel lesz a projekté.
 
 **Állítható:**
 
 - Alapszínek: kiemelő szín, oldal háttere, kártyák háttere, szöveg, másodlagos szöveg, szegélyek
-- Kiemelések: kiemelt doboz színe és szövege (`>`), kiemelt szöveg (`==…==`)
 - Címsorok színe (Címsor 1–5)
-- Ikonok: szín, méret, vonalvastagság
-- Bekezdés betűmérete
+
+Alapértelmezés (ha semmi nincs beállítva): kiemelő szín `#F63900`, oldal háttere `#fafafa`, kártyák `#ffffff`, szöveg `#1a1a1a`, másodlagos szöveg `#6b7280`, szegélyek `#e2e5ea`; Címsor 1–3 a kiemelő színt, Címsor 4–5 a szöveg színét követi.
 
 Az **auto** jelölésű mezők nem kapnak külön színt, hanem igazodnak a kiemelő színhez (vagy a szöveg színéhez) — ha a kiemelő színt átállítod, ezek vele együtt változnak. Saját szín megadása után az **auto** gombbal lehet visszaállítani.
 
@@ -213,6 +196,9 @@ Az **auto** jelölésű mezők nem kapnak külön színt, hanem igazodnak a kiem
 
 - Betűtípus: Inter (szöveg) + Lexend (címsorok)
 - Címsorméretek: Címsor 1–5 (`#` … `#####`) = 32 / 28 / 24 / 20 / 18 px
+- Bekezdés betűmérete: 16 px
+- Ikonok: a kiemelő szín, 20 px
+- Kiemelt doboz (`>`): a kiemelő színből képzett átmenet, a szöveg színével
 - Sarkok lekerekítése: 14 px
 
 Ha egy projektnek még nincs közös megjelenése, a dokumentumai a korábbi, saját színeikkel jelennek meg; a Megjelenés oldal megnyitásakor az első ilyen dokumentum színeiből indul a beállítás.
@@ -329,6 +315,12 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.4 — Egyszerűbb megjelenés
+
+- Új alapértelmezett színek: kiemelő `#F63900`, szöveg `#1a1a1a` (a többi változatlan).
+- Megszűnt beállítások: ikonok (mindig a kiemelő szín), bekezdés betűmérete (16 px), kiemelések (a kiemelt doboz a kiemelő színből, a szöveg színével). A Megjelenés oldalon csak az alapszínek, a címsorok színe és a logó maradt.
+- Megszűnt formázások: **kiemelt szöveg** (`==…==` — a régi szövegekben a `==` jelek egyszerűen eltűnnek) és **szerkesztői jegyzet** (a régi jegyzetek sehol nem jelennek meg). Az eszköztárból és a „/” menüből is kikerültek.
 
 ### 4.3 — Logó a Megjelenésben
 
