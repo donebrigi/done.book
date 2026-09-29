@@ -122,6 +122,10 @@ async function confirmDownload() {
   closeDownloadMenu();
   await buildAndDownload();
 }
+async function confirmPdf() {
+  closeDownloadMenu();
+  await downloadCurrentPdf();
+}
 async function confirmPrint() {
   closeDownloadMenu();
   await printDocument();

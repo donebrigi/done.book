@@ -126,8 +126,8 @@ function renderHomeList() {
           <button class="btn-sm" data-act="rename" title="Átnevezés">✏</button>
           <button class="btn-sm" data-act="move" title="Áthelyezés másik projektbe">➡️</button>
           <button class="btn-sm" data-act="html" title="A kész kézikönyv letöltése HTML-ben (mindig az aktuális állapot)">⬇ HTML</button>
-          <button class="btn-sm" data-act="pdf" title="Nyomtatás / PDF — a nyomtatóablakban válaszd a „Mentés PDF-ként” lehetőséget">🖨 PDF</button>
-          <button class="btn-sm" data-act="link" title="Megosztható link másolása">🔗</button>
+          <button class="btn-sm" data-act="pdf" title="PDF letöltése (mindig az aktuális állapot)">⬇ PDF</button>
+          <button class="btn-sm" data-act="link" title="Megnyitás új lapon — a megosztható link a vágólapra is kerül">🔗</button>
           <button class="btn-sm del" data-act="del" title="Törlés">🗑</button>
         </td>
       </tr>`).join('')}</tbody></table>`;
@@ -141,7 +141,7 @@ function renderHomeList() {
       else if (act === 'rename') renameDocInProject(p.id, d.id, d.title);
       else if (act === 'move') openMoveDocModal(p.id, d.id, d.title);
       else if (act === 'html') downloadDocHtml(p.id, d.id);
-      else if (act === 'pdf') printDoc(p.id, d.id);
+      else if (act === 'pdf') downloadDocPdf(p.id, d.id, d.title);
       else if (act === 'link') copyDocShareLink(p.id, d.id);
       else if (act === 'del') deleteDocInProject(p.id, d.id, d.title);
     });
@@ -247,8 +247,8 @@ function renderProjectDocGrid() {
           <button class="btn-sm hp-doc-edit-btn" title="Átnevezés">✏</button>
           <button class="btn-sm hp-doc-move-btn" title="Áthelyezés másik projektbe">➡️</button>
           <button class="btn-sm hp-doc-dl-btn" title="A kész kézikönyv letöltése HTML-ben (mindig az aktuális állapot)">HTML</button>
-          <button class="btn-sm hp-doc-pdf-btn" title="Nyomtatás / PDF — a nyomtatóablakban válaszd a „Mentés PDF-ként” lehetőséget">PDF</button>
-          <button class="btn-sm hp-doc-link-btn" title="Megosztható link másolása (csak bejelentkezett felhasználók nyithatják meg)">🔗</button>
+          <button class="btn-sm hp-doc-pdf-btn" title="PDF letöltése (mindig az aktuális állapot)">PDF</button>
+          <button class="btn-sm hp-doc-link-btn" title="Megnyitás új lapon — a megosztható link a vágólapra is kerül (csak bejelentkezett felhasználók nyithatják meg)">🔗</button>
           <button class="btn-sm del hp-doc-del-btn" title="Dokumentum törlése">🗑</button>
           <button class="btn primary hp-doc-open-btn">Megnyitás</button>
         </div>
@@ -256,7 +256,7 @@ function renderProjectDocGrid() {
       card.querySelector('.hp-doc-edit-btn').onclick = (e) => { e.stopPropagation(); renameDocInProject(projectId, d.id, d.title); };
       card.querySelector('.hp-doc-move-btn').onclick = (e) => { e.stopPropagation(); openMoveDocModal(projectId, d.id, d.title); };
       card.querySelector('.hp-doc-dl-btn').onclick = (e) => { e.stopPropagation(); downloadDocHtml(projectId, d.id); };
-      card.querySelector('.hp-doc-pdf-btn').onclick = (e) => { e.stopPropagation(); printDoc(projectId, d.id); };
+      card.querySelector('.hp-doc-pdf-btn').onclick = (e) => { e.stopPropagation(); downloadDocPdf(projectId, d.id, d.title); };
       card.querySelector('.hp-doc-link-btn').onclick = (e) => { e.stopPropagation(); copyDocShareLink(projectId, d.id); };
       card.querySelector('.hp-doc-del-btn').onclick = (e) => { e.stopPropagation(); deleteDocInProject(projectId, d.id, d.title); };
       card.querySelector('.hp-doc-open-btn').onclick = (e) => { e.stopPropagation(); openDoc(); };

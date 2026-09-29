@@ -92,14 +92,14 @@ window.addEventListener('hashchange', () => {
   const shared = parseSharedViewHash();
   if (shared) openSharedView(shared.projectId, shared.docId);
 });
+// 🔗 gomb: a kész kézikönyvet új lapon megnyitja, és a linkjét a vágólapra is másolja.
 async function copyDocShareLink(projectId, docId) {
   const url = getDocShareUrl(projectId, docId);
-  try {
-    await navigator.clipboard.writeText(url);
-    toast('✓ Link vágólapra másolva — csak bejelentkezett felhasználók nyithatják meg');
-  } catch(e) {
-    window.prompt('Másold ki a linket:', url);
-  }
+  const win = window.open(url, '_blank'); // a kattintáshoz kötve, különben a böngésző blokkolná
+  let copied = false;
+  try { await navigator.clipboard.writeText(url); copied = true; } catch(e) { /* nem baj */ }
+  if (!win) toast('A böngésző blokkolta az új lapot — engedélyezd a felugró ablakokat.' + (copied ? ' A link a vágólapon van.' : ''), 'err', 6000);
+  else toast(copied ? '✓ Megnyitva új lapon, a link a vágólapra másolva' : '✓ Megnyitva új lapon', 'ok', 3000);
 }
 
 async function cloudLogin() {
