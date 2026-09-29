@@ -17,20 +17,15 @@
   </div>
   <div class="spacer"></div>
   <span id="status"></span>
-  <!-- Jobb oldal: Beállítások / Mentés / AI / Letöltés / Előnézet, ebben a sorrendben. -->
+  <!-- Jobb oldal: Beállítások / Megjelenés / Letöltés / Előnézet. (Mentés gomb nincs: minden automatikusan ment, Ctrl+S is működik.) -->
   <div id="topbar-editor-tools-right" style="display:none">
     <div class="sep"></div>
     <button class="btn" onclick="openProjModal('doc')" title="A dokumentum címe, logója, fejezetek másolása" style="padding:5px 10px;font-size:13px">⚙ Beállítások</button>
     <button class="btn" id="btn-design" onclick="openThemeForCurrentDoc()" title="A projekt megjelenése (színek) — a projekt minden dokumentumára érvényes" style="padding:5px 10px;font-size:13px">🎨 Megjelenés</button>
-    <button class="btn" onclick="saveCurrentFile()" title="Minden módosítás mentése most (Ctrl+S) — egyébként gépelés után automatikusan ment">💾 Mentés</button>
     <div class="dl-menu-wrap">
-      <button class="btn primary" onclick="toggleDownloadMenu(event)" id="btn-download" title="A kész HTML letöltése — felhő Dokumentumnál emellett a publikált oldal is frissül">⬇ Letöltés</button>
+      <button class="btn primary" onclick="toggleDownloadMenu(event)" id="btn-download" title="A kész kézikönyv letöltése (HTML, PDF) vagy a forrásfájlok (ZIP)">⬇ Letöltés</button>
       <div id="download-menu" class="dl-menu">
-        <div class="dl-menu-title">Kész kézikönyv (HTML)</div>
-        <label class="dl-menu-option">
-          <input type="checkbox" id="dl-optimize-images"/>
-          <span>🖼 Képek optimalizálása<br><small>WebP, max 1440px — kisebb fájl, de a képek minősége kicsit romlik</small></span>
-        </label>
+        <div class="dl-menu-title">Kész kézikönyv</div>
         <button class="btn primary" onclick="confirmDownload()" style="width:100%">⬇ HTML letöltése</button>
         <button class="btn" onclick="confirmPrint()" style="width:100%" title="Nyomtatási nézet: minden fejezet új oldalon, tartalomjegyzékkel, kinyitott lenyíló elemekkel. PDF-hez válaszd a „Mentés PDF-ként” nyomtatót.">🖨 Nyomtatás / PDF</button>
         <div class="dl-menu-sep"></div>

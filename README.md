@@ -36,7 +36,7 @@ Minden automatikusan a felhőbe mentődik:
 - **Képek:** beillesztéskor azonnal.
 - **Megjelenés:** a projekt Megjelenés oldalának **✓ Mentés** gombjával (addig csak a minta oldalon látszik).
 
-A **💾 Mentés** gomb (Ctrl+S) mindent azonnal elment. Ha még van mentetlen módosítás, a böngésző bezárás előtt figyelmeztet.
+Külön Mentés gomb nincs: minden magától ment, a Ctrl+S pedig mindent azonnal elment. Ha még van mentetlen módosítás, a böngésző bezárás előtt figyelmeztet.
 
 Induláskor az utoljára megnyitott dokumentum nyílik meg újra, mindig a felhőben lévő legfrissebb változattal.
 
@@ -48,7 +48,7 @@ Mentés előtt a szerkesztő megnézi, módosította-e valaki más a fejezetet, 
 - **Mindkettő megmarad** — az övé marad a fejezetben, a tiéd egy új „(saját változat)” fejezetbe kerül közvetlenül alá; utána kézzel összefésülhetők.
 - **Az enyém legyen** — az ő módosításai elvesznek.
 
-Ha az ablak valamiért nem látszik, de a felső sávban „⚠ Ütközés” áll, kattints a feliratra vagy a **💾 Mentés** gombra, és újra megjelenik.
+Ha az ablak valamiért nem látszik, de a felső sávban „⚠ Ütközés” áll, kattints a feliratra (vagy nyomj Ctrl+S-t), és újra megjelenik.
 
 A szerkezetnél (sorrend, csoportok, cím) egy egyszerű kérdés jön fel. Ha egy fejezetre váltasz, és nálad nincs mentetlen módosítás, a szerkesztő csendben betölti a felhőben lévő legfrissebb változatát.
 
@@ -208,7 +208,7 @@ Ha egy projektnek még nincs közös megjelenése, a dokumentumai a korábbi, sa
 A Kezdőlap tetején a nézetválasztóval lehet váltani:
 
 - **▦ Projektek:** a projektek kompakt kártyái — ikon és név egy sorban, jobb felső sarokban a dokumentumok száma; gombok: ✏ szerkesztés, 🎨 megjelenés, 🗑 törlés, Megnyitás.
-- **☰ Dokumentumok:** az összes dokumentum egy táblázatban — **Cím**, **Projekt** és a funkciógombok (megnyitás, átnevezés, áthelyezés, HTML letöltés, link másolása, törlés). A kereső mindkét nézetben szűr; a választott nézetet a böngésző megjegyzi.
+- **☰ Dokumentumok:** az összes dokumentum egy táblázatban — **Cím**, **Projekt** és a funkciógombok (megnyitás, átnevezés, áthelyezés, HTML, PDF, link másolása, törlés). A kereső mindkét nézetben szűr; a választott nézetet a böngésző megjegyzi.
 
 ## Fejezetek, csoportok, menü (bal oldali fa)
 
@@ -226,8 +226,10 @@ A bal oldali fa egyszerre a fejezetek listája, a sorrendjük és a kész oldal 
 A **⬇ Letöltés** menüben:
 
 - **🖨 Nyomtatás / PDF:** nyomtatási nézet egy új lapon — tartalomjegyzékkel, minden fejezet új oldalon, kinyitott lenyíló elemekkel, menü és kereső nélkül. PDF-hez a nyomtatóválasztóban a „Mentés PDF-ként” lehetőséget válaszd. (A letöltött HTML-ből nyomtatva is ugyanígy néz ki.)
-- **⬇ HTML letöltése:** a végleges, önálló HTML fájl (képekkel együtt). Egyúttal a felhőben is frissül a publikált változat — erre épül a megosztható link és a Projekt nézet **⬇ HTML** gombja. A *Képek optimalizálása* opció kisebb fájlt ad.
+- **⬇ HTML letöltése:** a végleges, önálló HTML fájl (képekkel együtt).
 - **📦 Markdown + képek (ZIP):** a dokumentum összes forrásfájlja (fejezetek, képek, `config.json`, `style.css`) — archiváláshoz, vagy máshová importáláshoz.
+
+**Nem kell semmit „legenerálni”:** a kész HTML-t (letöltés, PDF, megosztott 🔗 link, a listák HTML / PDF gombjai) mindig a dokumentum aktuális állapotából állítja össze a szerkesztő, abban a pillanatban, amikor kéred. A HTML és a PDF a Projekt nézet dokumentumkártyáiról és a Kezdőlap dokumentumlistájából is letölthető, a dokumentum megnyitása nélkül.
 
 Egy-egy fejezet `.md` fájlja a bal oldali fában a fejezet **⬇** gombjával tölthető le (a képek beágyazva).
 
@@ -251,7 +253,6 @@ kezikonyv (Supabase Storage bucket)
     └── <dokumentum-azonosító>/
         ├── config.json        # cím, leírás, menü (nav_groups), fejezetsorrend (fileOrder)
         ├── logo.txt           # régi, dokumentumonkénti logó — csak addig él, amíg a projektnek nincs _logo.txt-je
-        ├── published.html     # a legutóbb letöltött (publikált) HTML
         ├── images/            # képek (tartalom-hash névvel)
         └── sections/
             ├── 01_bevezetes.md
@@ -315,6 +316,15 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.5 — Mindig naprakész HTML, PDF a listákban
+
+- A kész HTML-t nem kell többé legenerálni: letöltéskor, PDF-nél, a megosztott linken és a listák gombjainál mindig az aktuális állapotból készül (a `published.html` már nem kell).
+- **PDF** gomb a Projekt nézet dokumentumkártyáin és a Kezdőlap dokumentumlistájában.
+- A dokumentumkártyák a projektkártyákhoz igazodnak: ikon + cím egy sorban, a fejezetek száma a jobb felső sarokban, ikonos gombok.
+- A kész oldalon a logó és a dokumentum címe egy sorban van.
+- Kikerült a 💾 Mentés gomb (minden magától ment, Ctrl+S továbbra is működik) és a képoptimalizálás opció a letöltésből.
+- Az ikonválasztóban az ikonok világosak, jól látszanak a sötét háttéren.
 
 ### 4.4 — Egyszerűbb megjelenés
 
