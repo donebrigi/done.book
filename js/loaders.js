@@ -24,7 +24,7 @@ async function cloudLoadProject(folderId, topProjectId, docId) {
   project.config = data.config;
   // Megjelenés: a PROJEKT témája (ha még nincs, a dokumentum régi színei).
   project.themeVars = await resolveDocTheme(topProjectId, data.css);
-  project.logo = data.logo;
+  project.logo = await resolveDocLogo(topProjectId, data.logo); // a projekt logója (régi dokumentumnál a saját)
   project.remoteConfig = data.configText != null ? data.configText : null;
   for (const [fn, raw] of Object.entries(data.files)) {
     const f = makeFileEntry(raw);

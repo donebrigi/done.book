@@ -3,7 +3,7 @@
 // kézikönyv-oldal, amin MINDEN formázás megtalálható — így egy pillantással látszik,
 // mire hat egy-egy szín. A beállítás a projekt összes dokumentumára érvényes.
 
-const TV = { projectId: null, projectName: '', vars: null, saved: null, returnTo: null, timer: null };
+const TV = { projectId: null, projectName: '', vars: null, saved: null, logo: '', savedLogo: '', returnTo: null, timer: null };
 
 // Minta tartalom: minden formázási elem egy helyen.
 const THEME_SAMPLE = {
@@ -70,7 +70,7 @@ function buildThemeSampleHtml(vars) {
   const fake = {
     name: '__sample', config: { title: TV.projectName || 'Minta', subtitle: TV.projectName || 'Minta kézikönyv', description: 'Minta oldal a megjelenéshez',
       nav_groups: [{ name: 'Első lépések', sections: ['hasznalat', 'gyik'], subgroups: [] }] },
-    fileOrder: ['01.md', '02.md', '03.md'], files, logo: ''
+    fileOrder: ['01.md', '02.md', '03.md'], files, logo: TV.logo || ''
   };
   return buildPreviewHtml(fake, buildAllSectionsHtml(fake, { showNotes: true }), true, composeThemeCss(v));
 }
@@ -97,6 +97,19 @@ async function openThemeView(projectId, returnTo) {
   TV.vars = normalizeThemeVars(vars || {});
   TV.saved = JSON.stringify(TV.vars);
 
+  // Logó: a projekt logója; ha még nincs, az első olyan dokumentumé, amelyiknek van.
+  let logo = await cloudGetProjectLogo(projectId);
+  let logoMigrated = false;
+  if (logo == null) {
+    logo = '';
+    for (const d of await cloudListDocuments(projectId)) {
+      const l = ((await cloudDownloadText(projectId + '/' + d.id + '/logo.txt')) || '').trim();
+      if (l) { logo = l; logoMigrated = true; break; }
+    }
+  }
+  TV.logo = logo;
+  TV.savedLogo = logoMigrated ? null : logo; // átvett logónál a Mentés véglegesíti
+
   state.uiView = 'theme';
   ['view-home', 'view-project'].forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById('main').style.display = 'none';
@@ -108,7 +121,7 @@ async function openThemeView(projectId, returnTo) {
   renderThemeForm();
   renderThemePreview();
   updateThemeDirty();
-  if (migrated) toast('A projekt még nem kapott közös megjelenést — egy meglévő dokumentum színeiből indultunk. Mentéssel ez lesz a projekt témája.', 'ok', 6000);
+  if (migrated || logoMigrated) toast('A projekt még nem kapott közös ' + [migrated && 'megjelenést', logoMigrated && 'logót'].filter(Boolean).join(' és ') + ' — egy meglévő dokumentuméból indultunk. Mentéssel ez lesz a projekté.', 'ok', 6000);
 }
 
 async function closeThemeView() {
@@ -130,7 +143,7 @@ async function closeThemeView() {
   }
 }
 
-function isThemeDirty() { return !!TV.vars && JSON.stringify(TV.vars) !== TV.saved; }
+function isThemeDirty() { return !!TV.vars && (JSON.stringify(TV.vars) !== TV.saved || TV.logo !== TV.savedLogo); }
 function updateThemeDirty() {
   const el = document.getElementById('theme-dirty');
   el.textContent = isThemeDirty() ? '● Nem mentett módosítás' : 'Minden mentve';
@@ -138,13 +151,15 @@ function updateThemeDirty() {
 }
 
 async function saveThemeView() {
-  const ok = await cloudSaveProjectTheme(TV.projectId, TV.vars);
+  let ok = await cloudSaveProjectTheme(TV.projectId, TV.vars);
+  if (ok && TV.logo !== TV.savedLogo) ok = await cloudSaveProjectLogo(TV.projectId, TV.logo);
   if (!ok) { toast('⚠ A mentés nem sikerült', 'err'); return false; }
   TV.saved = JSON.stringify(TV.vars);
+  TV.savedLogo = TV.logo;
   updateThemeDirty();
-  // A megnyitott dokumentum (ha ebbe a projektbe tartozik) azonnal megkapja az új témát.
+  // A megnyitott dokumentum (ha ebbe a projektbe tartozik) azonnal megkapja az új témát és logót.
   const p = currentProj();
-  if (p && p.topProjectId === TV.projectId) p.themeVars = normalizeThemeVars(TV.vars);
+  if (p && p.topProjectId === TV.projectId) { p.themeVars = normalizeThemeVars(TV.vars); p.logo = TV.logo; }
   toast('✓ Megjelenés mentve — a projekt minden dokumentumára érvényes');
   return true;
 }
@@ -160,7 +175,17 @@ function resetThemeView() {
 function renderThemeForm() {
   const host = document.getElementById('theme-form-fields');
   const v = TV.vars;
-  let html = '';
+  let html = `<div class="tf-group"><div class="tf-title">Logó</div>
+    <div class="tf-logo">
+      <div class="tf-logo-box">${TV.logo ? `<img src="${escapeHtml(TV.logo)}" alt="logó"/>` : '<span>nincs logó</span>'}</div>
+      <div class="tf-logo-actions">
+        <button class="btn" onclick="document.getElementById('theme-logo-input').click()">📂 ${TV.logo ? 'Csere' : 'Feltöltés'}</button>
+        ${TV.logo ? '<button class="btn tf-logo-del" onclick="removeThemeLogo()">🗑 Eltávolítás</button>' : ''}
+      </div>
+      <input id="theme-logo-input" type="file" accept="image/*" style="display:none" onchange="onThemeLogoPicked(this)"/>
+    </div>
+    <div class="tf-note-small">A bal oldali menü tetején jelenik meg, a projekt minden dokumentumában. PNG, SVG vagy JPG, ajánlott max. 200×60 px.</div>
+  </div>`;
   THEME_GROUPS.forEach(g => {
     html += `<div class="tf-group"><div class="tf-title">${escapeHtml(g.title)}</div>`;
     g.fields.forEach(f => {
@@ -229,4 +254,25 @@ function openThemeForCurrentDoc() {
   const p = currentProj();
   if (!p) return;
   openThemeView(p.topProjectId, 'editor');
+}
+
+// ── Logó ──
+function onThemeLogoPicked(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { toast('Csak képfájl tölthető fel logónak.', 'err'); return; }
+  if (file.size > 1024 * 1024) { toast('A logó túl nagy (max. 1 MB) — használj kisebb képet.', 'err', 5000); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    TV.logo = e.target.result;
+    renderThemeForm();
+    onThemeChanged();
+  };
+  reader.readAsDataURL(file);
+}
+function removeThemeLogo() {
+  TV.logo = '';
+  renderThemeForm();
+  onThemeChanged();
 }

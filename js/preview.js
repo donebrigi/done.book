@@ -134,9 +134,10 @@ function buildAllSectionsHtml(proj, mdOpts) {
     const id = f.meta.id || fn;
     const body = mdToHtml(f.content, mdOpts);
     const fnAttr = mdOpts && mdOpts.lines ? ` data-fn="${escapeHtml(fn)}"` : '';
+    const bar = madeByBarHtml(proj); // „Made by DONE” sáv — kódból, minden fejezet tetején
     return idx === 0
-      ? `<header class="hero" id="${escapeHtml(id)}"${fnAttr}>${body}</header>`
-      : `<section class="section" id="${escapeHtml(id)}"${fnAttr}>${body}</section>`;
+      ? `<header class="hero" id="${escapeHtml(id)}"${fnAttr}>${bar}${body}</header>`
+      : `<section class="section" id="${escapeHtml(id)}"${fnAttr}>${bar}${body}</section>`;
   }).join('\n\n');
 }
 

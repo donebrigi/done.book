@@ -3,7 +3,6 @@
 // Minden módosítás a Supabase Storage-ba kerül, a Dokumentum mappájába:
 //   sections/*.md  – fejezetek (gépelés után ~1,5 mp-cel automatikusan)
 //   config.json    – cím, menü/fa, fejezetsorrend
-//   logo.txt       – logó
 //   images/*       – képek (beillesztéskor azonnal, lásd images.js)
 //
 // Sikertelen mentésnél a fejezet "mentetlen" (●) marad, és a következő
@@ -53,12 +52,6 @@ function scheduleConfigSave() {
   }, 800);
 }
 
-
-// ── logo.txt ──
-async function saveProjectLogo(proj) {
-  if (!proj) return false;
-  return cloudSaveLogo(proj);
-}
 
 // ── Fejezetek ──
 // Egy fejezet mentése, ütközésjelzéssel: mentés előtt megnézzük, a felhőben lévő

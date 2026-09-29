@@ -28,21 +28,13 @@ function switchModalTab(tab) {
   if (tab === 'copy') loadCopyTab();
 }
 
-// ── Dokumentum fül: cím, alcím, leírás, logó ─────────────────────────────────
+// ── Dokumentum fül: cím, alcím, leírás (a logó a projekt Megjelenés oldalán van) ─────────────────────────────────
 function loadDocTab() {
   const proj = currentProj();
   if (!proj) return;
   document.getElementById('doc-title').value = proj.config.title || '';
   document.getElementById('doc-subtitle').value = proj.config.subtitle || '';
   document.getElementById('doc-description').value = proj.config.description || '';
-  showLogoPreview(proj.logo);
-}
-
-function showLogoPreview(logo) {
-  const img = document.getElementById('logo-preview-img');
-  const empty = document.getElementById('logo-preview-empty');
-  if (logo) { img.src = logo; img.style.display = 'block'; empty.style.display = 'none'; }
-  else { img.style.display = 'none'; empty.style.display = 'block'; }
 }
 
 async function saveDocSettings() {
@@ -58,32 +50,6 @@ async function saveDocSettings() {
   renderPreview();
   if (state.projectDocs) { const d = state.projectDocs.find(x => x.id === proj.docId); if (d) d.title = title; }
   toast(ok ? '✓ Dokumentum adatai mentve' : '⚠ Mentés sikertelen', ok ? 'ok' : 'err');
-}
-
-function handleLogoUpload(input) {
-  const proj = currentProj();
-  const file = input.files[0];
-  input.value = '';
-  if (!proj || !file) return;
-  const reader = new FileReader();
-  reader.onload = async e => {
-    proj.logo = e.target.result;
-    showLogoPreview(proj.logo);
-    const ok = await saveProjectLogo(proj);
-    renderPreview();
-    toast(ok ? '✓ Logó feltöltve' : '⚠ A logó mentése nem sikerült', ok ? 'ok' : 'err');
-  };
-  reader.readAsDataURL(file);
-}
-
-async function removeLogo() {
-  const proj = currentProj();
-  if (!proj) return;
-  proj.logo = '';
-  showLogoPreview('');
-  await saveProjectLogo(proj);
-  renderPreview();
-  toast('Logó eltávolítva');
 }
 
 // ── Fejezetek másolása egy másik Dokumentumból ────────────────────────────────

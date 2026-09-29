@@ -27,7 +27,7 @@ const SEARCH_JS = `(function () {
             if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
             const p = node.parentElement;
             if (!p) return NodeFilter.FILTER_REJECT;
-            if (p.closest("aside, .print-toc")) return NodeFilter.FILTER_REJECT;
+            if (p.closest("aside, .print-toc, .made-by-bar")) return NodeFilter.FILTER_REJECT;
             if (["SCRIPT", "STYLE", "NOSCRIPT"].includes(p.tagName)) return NodeFilter.FILTER_REJECT;
             return NodeFilter.FILTER_ACCEPT;
           },

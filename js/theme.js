@@ -108,12 +108,38 @@ main h5{color:${c('h4Color')}}
 main h6{color:${c('h5Color')}}
 .brand h1{color:${v.accent}}
 .mdi svg{width:${v.iconSize}px;height:${v.iconSize}px;stroke:${c('iconColor')};stroke-width:${v.iconStroke};color:${c('iconColor')}}
-`;
+` + MADE_BY_CSS;
 }
 
 function themeFontLinkTag() {
   return `<link href="https://fonts.googleapis.com/css2?${THEME_FIXED.google}&display=swap" rel="stylesheet"/>`;
 }
+
+// ── „Made by DONE” sáv minden fejezet tetején (kódból, nem szerkeszthető) ─────
+// A logó betűi a szöveg színét veszik fel (currentColor), a narancs négyzet fix.
+const DONE_LOGO_SVG = '<svg class="made-by-logo" viewBox="0 0 660 154" role="img" aria-label="DONE" xmlns="http://www.w3.org/2000/svg">'
+  + '<path fill="currentColor" d="M0 2.77422H57.1357C109.978 2.77422 140.626 33.1585 140.626 75.7626V76.2249C140.626 118.829 109.582 150.534 56.277 150.534H0V2.77422ZM57.6641 114.205C82.2357 114.205 98.4847 100.73 98.4847 76.9515V76.4891C98.4847 52.8422 82.1697 39.2353 57.6641 39.2353H41.0188V114.337H57.6641V114.205Z"/>'
+  + '<path fill="currentColor" d="M153.176 77.0836V76.7533C153.176 34.4135 187.392 0 233.1 0C278.809 0 312.562 33.8851 312.562 76.2249V76.5552C312.562 118.895 278.346 153.309 232.638 153.309C187.061 153.441 153.176 119.423 153.176 77.0836ZM270.684 77.0836V76.7533C270.684 55.4843 255.36 36.9235 232.638 36.9235C210.312 36.9235 195.318 55.022 195.318 76.357V76.6873C195.318 97.9563 210.774 116.517 233.1 116.517C255.69 116.517 270.684 98.4187 270.684 77.0836Z"/>'
+  + '<path fill="currentColor" d="M328.348 2.77422H366.593L427.428 80.9147V2.77422H468.05V150.402H432.117L368.971 69.5536V150.6H328.348V2.77422Z"/>'
+  + '<path fill="currentColor" d="M487.139 2.77422H606.166V37.6501H527.63V59.9099H598.57V92.2097H527.63V115.592H606.034V150.402H487.139V2.77422Z"/>'
+  + '<path fill="#E63E18" d="M659.999 115.592H625.124V150.402H659.999V115.592Z"/>'
+  + '</svg>';
+
+function madeByBarHtml(proj) {
+  const docName = escapeHtml((proj && proj.config && proj.config.title) || '');
+  return `<div class="made-by-bar"><span class="made-by-doc">${docName}</span><span class="made-by">Made by ${DONE_LOGO_SVG}</span></div>`;
+}
+
+const MADE_BY_CSS = `
+/* ── Made by DONE sáv ── */
+.made-by-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-18px -18px 16px;padding:9px 18px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--muted) 5%,var(--bg-card));border-radius:var(--radius) var(--radius) 0 0;font-family:var(--font);user-select:none}
+.made-by-doc{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.made-by{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0}
+.made-by-logo{height:13px;width:auto;display:block;color:var(--text)}
+@media print{
+  .made-by-bar{margin:0 0 5mm!important;padding:0 0 2.5mm!important;background:none!important;border-radius:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+`;
 
 // ── Régi, dokumentumonkénti megjelenés átvétele ──────────────────────────────
 // A korábbi verziók a színeket a dokumentum style.css-ébe írták (@kezikonyv-design blokk).
@@ -146,6 +172,21 @@ async function cloudGetProjectTheme(projectId) {
 }
 async function cloudSaveProjectTheme(projectId, vars) {
   return cloudUpload(projectId + '/_theme.json', JSON.stringify({ version: 1, vars: normalizeThemeVars(vars) }, null, 2), 'application/json');
+}
+
+// ── Projekt logó ── {projektId}/_logo.txt (data URL; üres fájl = szándékosan nincs logó)
+// null = a projektnek még nincs saját logója (ilyenkor a dokumentum régi logo.txt-je él tovább).
+async function cloudGetProjectLogo(projectId) {
+  if (!projectId) return null;
+  const txt = await cloudDownloadText(projectId + '/_logo.txt');
+  return txt == null ? null : txt.trim();
+}
+async function cloudSaveProjectLogo(projectId, logo) {
+  return cloudUpload(projectId + '/_logo.txt', logo || '', 'text/plain');
+}
+async function resolveDocLogo(topProjectId, docLogo) {
+  const p = await cloudGetProjectLogo(topProjectId);
+  return p != null ? p : (docLogo || '');
 }
 
 // Egy dokumentum tényleges témája: projekt téma → (ha nincs) a dokumentum régi színei → alap.

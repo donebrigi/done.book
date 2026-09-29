@@ -7,7 +7,7 @@
 //   cloudFolder, topProjectId, docId,
 //   config: {},           // config.json (title, subtitle, description, nav_groups, fileOrder, ...)
 //   css: '',              // style.css (alap + @kezikonyv-design blokk)
-//   logo: '',             // logo.txt (base64 kép)
+//   logo: '',             // a PROJEKT logója ({projekt}/_logo.txt; régi dokumentumnál a saját logo.txt)
 //   files: { [fn]: { meta, content, raw, dirty } },   // sections/*.md
 //   fileOrder: [fn, ...]  // a dokumentum sorrendje = a bal oldali fa sorrendje
 // }

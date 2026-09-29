@@ -81,10 +81,6 @@ async function cloudSaveConfig(proj) {
   if (!proj.cloudFolder) return true;
   return cloudUpload(proj.cloudFolder + '/config.json', serializeConfig(proj), 'application/json');
 }
-async function cloudSaveLogo(proj) {
-  if (!proj.cloudFolder) return true;
-  return cloudUpload(proj.cloudFolder + '/logo.txt', proj.logo || '', 'text/plain');
-}
 async function cloudSaveOutput(proj, outputName, html) {
   if (!proj.cloudFolder) return true;
   return cloudUpload(proj.cloudFolder + '/' + outputName, html, 'text/html');
