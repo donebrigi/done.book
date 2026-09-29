@@ -826,3 +826,5 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .doc-table tr.dragging td { opacity: .45; }
 .dt-grip { color: var(--text3); font-size: 11px; letter-spacing: -2px; margin-right: 8px; opacity: .6; }
 @media (max-width: 900px) { #home-side { width: 210px; } #home-main { padding: 16px; } .hh-top { flex-wrap: wrap; } }
+
+#home-count.refreshing::after { content: " · frissítés…"; color: var(--text3); }
