@@ -1,6 +1,8 @@
-# Kézikönyv Szerkesztő
+# DONE.book
 
-Böngészőben futó szerkesztő kézikönyvek / belső dokumentációk összeállításához. Markdown fejezetekből épít fel egy stílusos, kereshető, navigálható HTML oldalt. Minden adat a felhőben (Supabase) van, így minden bejelentkezett kolléga ugyanazt látja és szerkeszti.
+*(korábbi munkanév: Kézikönyv Szerkesztő)*
+
+A DONE böngészőben futó szerkesztője kézikönyvek / belső dokumentációk összeállításához. Markdown fejezetekből épít fel egy stílusos, kereshető, navigálható HTML oldalt. Minden adat a felhőben (Supabase) van, így minden bejelentkezett kolléga ugyanazt látja és szerkeszti.
 
 Nincs build lépés és nincs saját szerver: az `index.html` mellé a `css/`, `js/` és `vendor/` mappát kell feltölteni (pl. GitHub Pages-re), és böngészőben megnyitni.
 
@@ -200,6 +202,12 @@ Tipp: a harmadlagos szín legyen világos (fehér vagy nagyon halvány árnyalat
 
 A korábbi (4.7 előtti) beállításokat a szerkesztő automatikusan átveszi: a régi kiemelő szín lesz az elsődleges, a régi „Címsor 2” színe (ha nem volt külön megadva, a kiemelő szín) a másodlagos, a régi kártyaháttér a harmadlagos. Ha egy projektnek még nincs közös megjelenése, a Megjelenés oldal megnyitásakor az első dokumentum régi színeiből indul a beállítás.
 
+## Interaktív bemutató
+
+Az első belépéskor a Kezdőlapon egy rövid, lépésenkénti bemutató indul: buborékok mutatják meg a felület részeit (projektek, Összes dokumentum, Új projekt, projekt fejléce, táblázat, egy dokumentum gombjai, keresés, fiók). A **Tovább** gombbal vagy a → billentyűvel lehet lépni, az **Esc**-kel bármikor kilépni. Ezután nem indul újra magától (a böngésző megjegyzi), de bármikor elindítható: jobb felső sarok, profil menü → **❓ Bemutató**.
+
+A bemutató lépései a `js/tour.js`-ben vannak (ha a felület változik, itt kell frissíteni őket). A szerkesztő és a Megjelenés oldal bemutatója később készül; addig a ❓ Bemutató a Kezdőlap bemutatóját indítja.
+
 ## Kezdőlap
 
 A Kezdőlap felépítése a szerkesztőhöz hasonló:
@@ -227,11 +235,11 @@ A Kezdőlap felépítése a szerkesztőhöz hasonló:
 A bal oldali fa egyszerre a fejezetek listája, a sorrendjük és a kész oldal menüje — ami itt látszik, az lesz a menüben is, ugyanebben a sorrendben.
 
 - **Húzd** a fejezeteket a sorrend változtatásához, vagy egy csoport fejlécére / csoporton belülre a csoportba tételhez.
-- **+ Csoport:** új lenyíló menüpont. A csoport fejlécén: **＋** alcsoport, **✏** átnevezés (vagy dupla kattintás), **🗑** törlés (a fejezetei nem törlődnek, a lista tetejére kerülnek). A csoportok és alcsoportok is húzhatók, a **▾** nyíllal összecsukhatók.
+- **+ Csoport:** új lenyíló menüpont. A csoport fejlécén: **＋** alcsoport, **✏** átnevezés (vagy dupla kattintás a nevén — a név helyben szerkeszthető, Enter = mentés, Esc = mégse), **🗑** törlés (a fejezetei nem törlődnek, a lista tetejére kerülnek). A csoportok és alcsoportok is húzhatók, a **▾** nyíllal összecsukhatók.
 - A csoport nélküli fejezetek a menü tetején, sima linkként jelennek meg (pl. Bevezetés).
 - **+ Fejezet:** új fejezet az aktív fejezet után, ugyanabba a csoportba.
 - Az aktív fejezet alatt a **címsorai** látszanak — kattintásra oda ugrik a szerkesztő és az előnézet.
-- Fejezeten: **⬇** letöltés `.md` fájlként, **🗑** törlés.
+- Fejezeten: **✏** átnevezés (vagy dupla kattintás a címén — helyben szerkeszthető, Enter = mentés, Esc = mégse), **⬇** letöltés `.md` fájlként, **🗑** törlés. Átnevezéskor a fejezet elején lévő `# Cím` sor is vele változik (a szerkesztő fölötti cím mezőnél ugyanígy).
 
 ## Letöltés
 
@@ -315,6 +323,7 @@ js/
   preview.js            # élő előnézet, HTML összeállítás, menü
   previewsync.js        # görgetés-szinkron, kattintás az előnézetben
   build.js              # kész HTML (mindig élőben), letöltés, nyomtatás, ZIP letöltés
+  tour.js               # ❓ interaktív bemutató (driver.js), a lépések listája
   pdf.js                # 📄 PDF letöltés (html2pdf.js, vendor/)
   links.js              # link-javaslatok, hibás hivatkozások jelzése
   editor.js             # CodeMirror szerkesztő, "/" menü, kép-beillesztés
@@ -330,6 +339,17 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.10 — Bemutató, átnevezés, DONE.book
+
+- **Interaktív bemutató** a Kezdőlapon (első belépéskor magától, utána a profil menü **❓ Bemutató** pontjából). Könyvtár: driver.js (ingyenes, MIT, `vendor/driver.js.iife.js` + `vendor/driver.css`).
+- **Átnevezés mindig működik:** a csoportok, alcsoportok és most már a **fejezetek** is a fában, helyben nevezhetők át (✏ gomb vagy dupla kattintás; Enter / Esc). Korábban felugró ablak kérte be a nevet, amit a böngésző letilthat — ilyenkor „nem történt semmi”; és az automatikus mentés újrarajzolása sem szakítja meg többé a szerkesztést.
+- A fejezet címének módosításakor a fejezet elején lévő `# Cím` sor akkor is vele változik, ha korábban eltért a címtől.
+- A böngészőfülön és a belépő képernyőn: **DONE.book**.
+
+### 4.9 — DONEbook
+
+- Az eszköz új neve: **DONEbook** (böngészőfül, belépő képernyő). Elkészült hozzá a felhasználói útmutató is, a szerkesztőbe importálható formában (`donebook-felhasznaloi-utmutato` mappa).
 
 ### 4.8 — Gyorsabb betöltés
 
