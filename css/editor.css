@@ -768,3 +768,13 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 
 /* Gyors dokumentumváltó (szerkesztő felső sáv) */
 #topbar select#doc-switcher { max-width: 300px; min-width: 160px; }
+
+/* Megjelenés oldal — logó */
+.tf-logo { display:flex; align-items:center; gap:12px; }
+.tf-logo-box { width:140px; height:56px; background:#fff; border:1px solid var(--border2); border-radius:8px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; padding:6px; }
+.tf-logo-box img { max-width:100%; max-height:100%; display:block; }
+.tf-logo-box span { font-size:11px; color:#888; }
+.tf-logo-actions { display:flex; flex-direction:column; gap:6px; }
+.tf-logo-actions .btn { font-size:12px; padding:4px 12px; }
+.tf-logo-del { color:var(--red); }
+.tf-note-small { font-size:11px; color:var(--text3); margin-top:8px; line-height:1.5; }
