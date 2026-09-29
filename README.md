@@ -213,8 +213,9 @@ A Kezdőlap felépítése a szerkesztőhöz hasonló:
 - a legfontosabb adatok: hány dokumentum, összesen hány fejezet, mikor frissült utoljára,
 - gombok: **🎨 Megjelenés** (a projekt színei és logója), **✏** projekt szerkesztése (név, leírás, ikon, szín), **📤** importálás, **🗑** projekt törlése (minden dokumentumával együtt!), **+ Új dokumentum**.
 
-**A táblázat oszlopai:** Cím · Projekt · Dátum (utolsó módosítás; az egeret fölé víve a pontos időpont látszik) · ⬇ PDF · ⬇ HTML · 🔗 Link · Megnyitás · ✏ átnevezés · 🗑 törlés.
+**A táblázat oszlopai:** Cím · Projekt · Dátum (a dokumentum legutóbbi módosítása — bármelyik fejezeté vagy a beállításaié; az egeret fölé víve a pontos időpont látszik) · ⬇ PDF · ⬇ HTML · 🔗 Link · Megnyitás · ✏ átnevezés · 🗑 törlés.
 
+- **Gyors betöltés:** a Kezdőlap azonnal a legutóbb látott listát mutatja, és a háttérben frissül a felhőből (közben a dokumentumszám mellett „· frissítés…” látszik). Így a kollégák új dokumentumai is pár másodpercen belül megjelennek. Kijelentkezéskor a helyi másolat törlődik.
 - **Rendezés:** a **Cím** vagy a **Dátum** oszlop fejlécére kattintva; újabb kattintás megfordítja a sorrendet (▲ / ▼). A választást a böngésző megjegyzi.
 - **Keresés:** a táblázat fölötti mezővel cím vagy projektnév szerint.
 - **Áthelyezés másik projektbe:** fogd meg a dokumentum sorát, és **húzd rá** a bal oldali projektre (a célprojekt kiemelődik). Ha a célprojektben már van ugyanilyen azonosítójú dokumentum, az áthelyezés nem történik meg.
@@ -302,7 +303,7 @@ js/
   ui.js                 # toast, státusz, letöltés, topbar menük
   default-css.js        # alapértelmezett kézikönyv-CSS
   markdown.js           # frontmatter, markdown → HTML, címsorok
-  cloud.js              # Supabase kliens és Storage műveletek
+  cloud.js              # Supabase kliens és Storage műveletek (párhuzamos letöltés: mapLimit; Kezdőlap helyi másolata)
   structure.js          # fa = menü = sorrend (csoportok, áthelyezés)
   images.js             # képek feltöltése, gyorsítótár, beágyazás, régi képek átalakítása
   imageeditor.js        # képszerkesztő (vágás, nyíl, keret, számozás, kitakarás), csere, takarítás
@@ -329,6 +330,13 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.8 — Gyorsabb betöltés
+
+- A felhőből a fájlok **párhuzamosan** töltődnek (egyszerre legfeljebb 8 kérés), nem egymás után. Mérés 5 projekt × 4 dokumentum × 20 fejezet mellett, kérésenként ~120 ms hálózati késleltetéssel: **Kezdőlap 8,6 s → 0,7 s**, **dokumentum megnyitása 3,2 s → 0,5 s**. Ugyanez gyorsítja a PDF / HTML / megosztott link összeállítását is.
+- A Kezdőlap és a dokumentumváltó a legutóbbi listát **azonnal** mutatja (helyi másolatból), és a háttérben frissül. A dokumentumváltó fél percen belül nem kérdezi le újra a listát.
+- A dokumentum megnyitásakor a projekt témája és logója a fejezetekkel egy időben töltődik.
+- A táblázat **Dátum** oszlopa mostantól a dokumentum tényleges utolsó módosítását mutatja (bármelyik fejezet szerkesztése is számít, nem csak a beállításoké).
 
 ### 4.7 — Három szín, új Kezdőlap
 
