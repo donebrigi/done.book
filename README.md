@@ -102,14 +102,12 @@ A szerkesztő egy leegyszerűsített markdown-változatot ért. Az eszköztár g
 | Félkövér | `**szöveg**` | |
 | Dőlt | `*szöveg*` | |
 | Kód (inline) | `` `kód` `` | |
-| Címsor 1 | `# Cím` | HTML-ben `<h2>`, automatikusan kap egy hivatkozható azonosítót |
-| Címsor 2 | `## Cím` | HTML-ben `<h3>` |
-| Címsor 3 | `### Cím` | HTML-ben `<h4>` |
-| Címsor 4 | `#### Cím` | HTML-ben `<h5>` |
-| Címsor 5 | `##### Cím` | HTML-ben `<h6>` (a legkisebb szint) |
+| Címsor 1 | `# Cím` | a legnagyobb (32 px), elsődleges színű; automatikusan kap egy hivatkozható azonosítót |
+| Címsor 2 | `## Cím` | 28 px, másodlagos színű |
+| Címsor 3 | `### Cím` | 24 px, elsődleges színű — ez a legkisebb szint (a régi `####`, `#####` is ilyen lesz) |
 | Felsorolás | `- elem` | |
 | Számozott lista | `1. elem` | |
-| Kiemelt doboz | `> szöveg` | színe a projekt Megjelenés oldalán állítható |
+| Kiemelt doboz | `> szöveg` | az elsődleges színből képzett háttérrel |
 | Link | `[szöveg](url)` | |
 | Kép | `![alt szöveg](images/…)` | beillesztéssel jön létre, lásd [Képek](#képek) |
 | Képek egymás alatt, közös keretben | `<!-- shot-stack -->` ... képek ... `<!-- /shot-stack -->` | |
@@ -120,7 +118,7 @@ A szerkesztő egy leegyszerűsített markdown-változatot ért. Az eszköztár g
 
 ### Hivatkozás egy címsorra
 
-Minden címsor (Címsor 1–4) automatikusan kap egy azonosítót a szövegéből (kisbetűs, szóköz helyett kötőjel, ékezetek megmaradnak). Erre így hivatkozhatsz:
+Minden címsor (Címsor 1–3) automatikusan kap egy azonosítót a szövegéből (kisbetűs, szóköz helyett kötőjel, ékezetek megmaradnak). Erre így hivatkozhatsz:
 
 ```
 ## Telepítés lépései
@@ -175,40 +173,53 @@ A **⚙ Beállítások** ablak fülei:
 
 A megjelenés **projekt szinten** állítható: egy projekt minden dokumentuma ugyanazt a témát kapja. Megnyitás:
 
-- a Kezdőlapon a projekt kártyáján a **🎨 Megjelenés** gombbal,
-- a projekt oldalán a **🎨 Megjelenés** gombbal,
-- vagy a szerkesztőben a topbar **🎨 Megjelenés** gombjával (a megnyitott dokumentum projektjéé).
+- a Kezdőlapon: bal oldalt kattints a projektre, majd a fejlécében a **🎨 Megjelenés** gombra,
+- vagy a szerkesztőben a felső sáv **🎨 Megjelenés** gombjával (a megnyitott dokumentum projektjéé).
 
-Az oldalon balra a beállítások, jobbra egy **minta oldal** látszik, amin minden formázás megtalálható (címsorok, bekezdés, kiemelt doboz, listák, kép, táblázat, harmonika, kód, ikonok, menü, kereső) — minden módosítás rögtön látszik rajta. A **✓ Mentés** után a projekt összes dokumentuma az új megjelenést kapja.
+Az oldalon balra a beállítások, jobbra egy **minta oldal** látszik, amin minden formázás megtalálható (címsorok, bekezdés, link, kiemelt doboz, listák, kép, táblázat, harmonika, kód, ikonok, menü, kereső) — minden módosítás rögtön látszik rajta. A **✓ Mentés** után a projekt összes dokumentuma az új megjelenést kapja. Az **↺ Alapértelmezett** gomb visszaállítja az alapszíneket (Mentéssel lesz végleges).
 
-**Logó:** a Megjelenés oldal tetején tölthető fel / cserélhető / távolítható el (PNG, SVG, JPG, max. 1 MB). A projekt minden dokumentumában a bal oldali menü tetején jelenik meg, és a minta oldalon is látszik. Ha egy projektnek még nincs saját logója, az első olyan dokumentum logójából indul, amelyiknek volt; a Mentéssel lesz a projekté.
+**Logó:** a Megjelenés oldal tetején tölthető fel / cserélhető / távolítható el (PNG, SVG, JPG, max. 1 MB). A kész oldal bal felső sarkában, a dokumentum címe mellett jelenik meg, a projekt minden dokumentumában. Ha egy projektnek még nincs saját logója, az első olyan dokumentum logójából indul, amelyiknek volt; a Mentéssel lesz a projekté.
 
-**Állítható:**
+**Csak három színt kell megadni:**
 
-- Alapszínek: kiemelő szín, oldal háttere, kártyák háttere, szöveg, másodlagos szöveg, szegélyek
-- Címsorok színe (Címsor 1–5)
+| Szín | Mire hat | Alapértelmezés |
+|---|---|---|
+| **Elsődleges** | menü, ikonok, kiemelt doboz (`>`), **Címsor 1** és **Címsor 3**, a felsorolások jelei, a dokumentum címe a menüben | `#F63900` |
+| **Másodlagos** | **Címsor 2** és a **linkek** | `#F63900` |
+| **Harmadlagos** | az **oldal és a kártyák háttere** | `#FFFFFF` (fehér) |
 
-Alapértelmezés (ha semmi nincs beállítva): kiemelő szín `#F63900`, oldal háttere `#fafafa`, kártyák `#ffffff`, szöveg `#1a1a1a`, másodlagos szöveg `#6b7280`, szegélyek `#e2e5ea`; Címsor 1–3 a kiemelő színt, Címsor 4–5 a szöveg színét követi.
-
-Az **auto** jelölésű mezők nem kapnak külön színt, hanem igazodnak a kiemelő színhez (vagy a szöveg színéhez) — ha a kiemelő színt átállítod, ezek vele együtt változnak. Saját szín megadása után az **auto** gombbal lehet visszaállítani.
+Tipp: a harmadlagos szín legyen világos (fehér vagy nagyon halvány árnyalat) — a szöveg színe fixen sötét, sötét háttéren nem lenne olvasható.
 
 **Egységes, nem állítható (kódból jön, minden projektben azonos):**
 
+- Szöveg: `#1a1a1a`, másodlagos szöveg (képaláírás, leírás): `#6b7280`, szegélyek: `#e2e5ea`
 - Betűtípus: Inter (szöveg) + Lexend (címsorok)
-- Címsorméretek: Címsor 1–5 (`#` … `#####`) = 32 / 28 / 24 / 20 / 18 px
-- Bekezdés betűmérete: 16 px
-- Ikonok: a kiemelő szín, 20 px
-- Kiemelt doboz (`>`): a kiemelő színből képzett átmenet, a szöveg színével
+- Címsorméretek: Címsor 1–3 (`#`, `##`, `###`) = 32 / 28 / 24 px
+- Bekezdés betűmérete: 16 px; ikonok: 20 px
 - Sarkok lekerekítése: 14 px
 
-Ha egy projektnek még nincs közös megjelenése, a dokumentumai a korábbi, saját színeikkel jelennek meg; a Megjelenés oldal megnyitásakor az első ilyen dokumentum színeiből indul a beállítás.
+A korábbi (4.7 előtti) beállításokat a szerkesztő automatikusan átveszi: a régi kiemelő szín lesz az elsődleges, a régi „Címsor 2” színe (ha nem volt külön megadva, a kiemelő szín) a másodlagos, a régi kártyaháttér a harmadlagos. Ha egy projektnek még nincs közös megjelenése, a Megjelenés oldal megnyitásakor az első dokumentum régi színeiből indul a beállítás.
 
 ## Kezdőlap
 
-A Kezdőlap tetején a nézetválasztóval lehet váltani:
+A Kezdőlap felépítése a szerkesztőhöz hasonló:
 
-- **▦ Projektek:** a projektek kompakt kártyái — ikon és név egy sorban, jobb felső sarokban a dokumentumok száma; gombok: ✏ szerkesztés, 🎨 megjelenés, 🗑 törlés, Megnyitás.
-- **☰ Dokumentumok:** az összes dokumentum egy táblázatban — **Cím**, **Projekt** és a funkciógombok (megnyitás, átnevezés, áthelyezés, HTML, PDF, link másolása, törlés). A kereső mindkét nézetben szűr; a választott nézetet a böngésző megjegyzi.
+- **Bal oldalt a projektek**, mint mappák, **ábécérendben**, mellettük a dokumentumaik száma. Legfelül a **📚 Összes dokumentum**. Itt van a **+ Új projekt** gomb is.
+- **Középen a dokumentumok táblázata.** Egy projektre kattintva csak az ő dokumentumai látszanak; az **Összes dokumentum** minden projekt minden dokumentumát mutatja.
+
+**Projekt fejléce** (ha egy projekt van kiválasztva) — a táblázat fölött:
+
+- a projekt ikonja, neve és **leírása** (rövid összefoglaló a projektről — a ✏ gombbal szerkeszthető; több soros is lehet),
+- a legfontosabb adatok: hány dokumentum, összesen hány fejezet, mikor frissült utoljára,
+- gombok: **🎨 Megjelenés** (a projekt színei és logója), **✏** projekt szerkesztése (név, leírás, ikon, szín), **📤** importálás, **🗑** projekt törlése (minden dokumentumával együtt!), **+ Új dokumentum**.
+
+**A táblázat oszlopai:** Cím · Projekt · Dátum (utolsó módosítás; az egeret fölé víve a pontos időpont látszik) · ⬇ PDF · ⬇ HTML · 🔗 Link · Megnyitás · ✏ átnevezés · 🗑 törlés.
+
+- **Rendezés:** a **Cím** vagy a **Dátum** oszlop fejlécére kattintva; újabb kattintás megfordítja a sorrendet (▲ / ▼). A választást a böngésző megjegyzi.
+- **Keresés:** a táblázat fölötti mezővel cím vagy projektnév szerint.
+- **Áthelyezés másik projektbe:** fogd meg a dokumentum sorát, és **húzd rá** a bal oldali projektre (a célprojekt kiemelődik). Ha a célprojektben már van ugyanilyen azonosítójú dokumentum, az áthelyezés nem történik meg.
+- **🔗 Link:** új lapon megnyitja a kész kézikönyvet, és a megosztható linket a vágólapra is másolja (csak bejelentkezett felhasználók nyithatják meg).
+- A **PDF** és a **HTML** mindig a dokumentum aktuális állapotából készül, a dokumentum megnyitása nélkül.
 
 ## Fejezetek, csoportok, menü (bal oldali fa)
 
@@ -230,13 +241,13 @@ A **⬇ Letöltés** menüben:
 - **⬇ HTML letöltése:** a végleges, önálló HTML fájl (képekkel együtt).
 - **📦 Markdown + képek (ZIP):** a dokumentum összes forrásfájlja (fejezetek, képek, `config.json`, `style.css`) — archiváláshoz, vagy máshová importáláshoz.
 
-**Nem kell semmit „legenerálni”:** a kész HTML-t (letöltés, PDF, megosztott 🔗 link, a listák HTML / PDF gombjai) mindig a dokumentum aktuális állapotából állítja össze a szerkesztő, abban a pillanatban, amikor kéred. A HTML és a PDF (📄 letöltés) a Projekt nézet dokumentumkártyáiról és a Kezdőlap dokumentumlistájából is letölthető, a dokumentum megnyitása nélkül.
+**Nem kell semmit „legenerálni”:** a kész HTML-t (letöltés, PDF, megosztott 🔗 link, a listák HTML / PDF gombjai) mindig a dokumentum aktuális állapotából állítja össze a szerkesztő, abban a pillanatban, amikor kéred. A HTML és a PDF a Kezdőlap táblázatából is letölthető, a dokumentum megnyitása nélkül.
 
 Egy-egy fejezet `.md` fájlja a bal oldali fában a fejezet **⬇** gombjával tölthető le (a képek beágyazva).
 
 ## Importálás
 
-A Projekt nézet **📤 Importálás** gombjával új dokumentum hozható létre:
+A Kezdőlapon egy projektet kiválasztva, a projekt fejlécének **📤** (Importálás) gombjával új dokumentum hozható létre ebben a projektben:
 
 - **egy mappából** a gépről: régi projektmappa (`config.json`, `style.css`, `sections/*.md`) vagy a ZIP letöltés kicsomagolt mappája (`images/` mappával);
 - **korábbi, böngészőben tárolt helyi projektből** (ha a régi szerkesztőben dolgoztál helyi mappával ebben a böngészőben).
@@ -249,7 +260,7 @@ A fejezetekbe ágyazott képek importáláskor automatikusan külön fájlba ker
 kezikonyv (Supabase Storage bucket)
 └── <projekt-azonosító>/
     ├── _project.json          # projekt neve, leírása, színe, ikonja
-    ├── _theme.json            # a projekt megjelenése (minden dokumentumára érvényes)
+    ├── _theme.json            # a projekt megjelenése: { primary, secondary, tertiary } (elsődleges / másodlagos / harmadlagos szín)
     ├── _logo.txt              # a projekt logója (data URL; üres = nincs logó)
     └── <dokumentum-azonosító>/
         ├── config.json        # cím, leírás, menü (nav_groups), fejezetsorrend (fileOrder)
@@ -310,7 +321,7 @@ js/
   tree.js               # bal oldali fa, húzás, fejezet létrehozás/törlés/letöltés
   project-modal.js      # ⚙ Beállítások ablak
   loaders.js            # dokumentum betöltése, importálás
-  views.js              # Kezdőlap, Projekt nézet, projekt/dokumentum kezelés
+  views.js              # Kezdőlap (projektek mint mappák + dokumentumtáblázat, húzással áthelyezés), projekt/dokumentum kezelés
   auth.js               # bejelentkezés, megosztott link
   app.js                # indítás
 ```
@@ -318,6 +329,14 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.7 — Három szín, új Kezdőlap
+
+- **Megjelenés: csak három szín.** Elsődleges (menü, ikonok, kiemelt doboz, Címsor 1 és 3), másodlagos (Címsor 2, linkek), harmadlagos (oldal és kártyák háttere). A szöveg, a másodlagos szöveg és a szegélyek színe fix. A régi beállítások automatikusan átkerülnek.
+- **Címsor 4 és 5 megszűnt** — a „/” menüből is kikerült; a régi `####`, `#####` címsorok Címsor 3-ként jelennek meg.
+- **Új Kezdőlap:** bal oldalt a projektek mappaként (ábécérendben, „Összes dokumentum” fölül), középen a dokumentumok táblázata (Cím, Projekt, Dátum, PDF, HTML, Link, Megnyitás, átnevezés, törlés). Rendezés cím és dátum szerint. A kiválasztott projekt fejlécében a leírás, a fontosabb adatok és a projekt gombjai (Megjelenés, szerkesztés, importálás, törlés, új dokumentum).
+- **Áthelyezés húzással:** a dokumentum sorát egy bal oldali projektre húzva. A külön Áthelyezés gomb és ablak megszűnt.
+- A kártyás nézet (projekt- és dokumentumkártyák, nézetválasztó) megszűnt.
 
 ### 4.6 — Valódi PDF letöltés, link megnyitása
 

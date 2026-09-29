@@ -248,23 +248,22 @@
 
 <!-- Kezdőlap nézet: Projektek listája -->
 <div id="view-home">
-  <div id="home-page">
-    <div class="hp-header-row">
-      <div>
-        <h1 id="home-title">Projektek</h1>
-        <div class="sub">Egy projekthez több dokumentum (kézikönyv) is tartozhat — mindenki, aki be tud jelentkezni, mindent lát.</div>
-      </div>
-      <div class="hp-header-tools">
-        <div id="home-view-toggle" class="view-toggle" title="Nézet">
-          <button data-mode="cards" onclick="setHomeViewMode('cards')">▦ Projektek</button>
-          <button data-mode="list" onclick="setHomeViewMode('list')">☰ Dokumentumok</button>
-        </div>
-        <input type="text" id="home-search" placeholder="🔍 Keresés projektek között..." oninput="renderHomeGrid()" />
-      </div>
+  <aside id="home-side">
+    <div class="hs-head">
+      <span>Projektek</span>
+      <button class="btn-sm" onclick="openNewTopProjectModal()" title="Új projekt (mappa) létrehozása">+ Új projekt</button>
     </div>
-    <div class="hp-grid" id="home-grid"></div>
-    <div id="home-list" style="display:none"></div>
-  </div>
+    <div id="home-folders"></div>
+    <div class="hs-hint">Egy dokumentumot a táblázatból egy projektre húzva áthelyezheted.</div>
+  </aside>
+  <section id="home-main">
+    <div id="home-header"></div>
+    <div class="home-toolbar">
+      <input type="text" id="home-search" placeholder="🔍 Keresés dokumentumok között..." oninput="renderHomeList()" />
+      <span id="home-count"></span>
+    </div>
+    <div id="home-list"></div>
+  </section>
 </div>
 
 <!-- Megjelenés (projekt téma): beállítások + minta oldal -->
@@ -288,20 +287,6 @@
 </div>
 
 <!-- Projekt nézet: Dokumentumok listája -->
-<div id="view-project">
-  <div id="project-page">
-    <div class="hp-header-row">
-      <div>
-        <h1 id="project-page-title">—</h1>
-        <div class="sub" id="project-page-desc"></div>
-      </div>
-      <button class="btn" onclick="openThemeView(state.currentTopProject, 'project')" title="A projekt összes dokumentumának megjelenése (színek)">🎨 Megjelenés</button>
-      <button class="btn" onclick="openImportModal()" title="Egy projektmappa, egy korábban letöltött ZIP kicsomagolt mappája, vagy egy régi, böngészőben tárolt projekt felvétele ide, dokumentumként">📤 Importálás</button>
-    </div>
-    <div class="hp-grid" id="project-doc-grid"></div>
-  </div>
-</div>
-
 <!-- Új / szerkesztés Projekt modal (ugyanaz a modal szolgálja ki mindkettőt) -->
 <div class="hp-modal-backdrop" id="new-topproject-modal-backdrop" onclick="closeNewTopProjectModal()">
   <div class="hp-modal" onclick="event.stopPropagation()">
@@ -317,19 +302,6 @@
     <div style="display:flex;gap:8px;margin-top:20px">
       <button class="btn" onclick="closeNewTopProjectModal()" style="flex:1">Mégse</button>
       <button class="btn primary" id="ntp-submit-btn" onclick="saveTopProject()" style="flex:1">Létrehozás</button>
-    </div>
-  </div>
-</div>
-
-<!-- Dokumentum áthelyezése másik Projektbe -->
-<div class="hp-modal-backdrop" id="move-doc-modal-backdrop" onclick="closeMoveDocModal()">
-  <div class="hp-modal" onclick="event.stopPropagation()">
-    <h3>➡️ Dokumentum áthelyezése</h3>
-    <label>Célprojekt</label>
-    <select id="move-doc-target-select"></select>
-    <div style="display:flex;gap:8px;margin-top:20px">
-      <button class="btn" onclick="closeMoveDocModal()" style="flex:1">Mégse</button>
-      <button class="btn primary" onclick="runMoveDoc()" style="flex:1">➡️ Áthelyezés</button>
     </div>
   </div>
 </div>
