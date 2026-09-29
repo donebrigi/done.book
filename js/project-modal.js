@@ -48,7 +48,9 @@ async function saveDocSettings() {
   const ok = await saveProjectConfig(proj);
   updateBreadcrumb();
   renderPreview();
-  if (state.projectDocs) { const d = state.projectDocs.find(x => x.id === proj.docId); if (d) d.title = title; }
+  const hp = (state.homeProjects || []).find(x => x.id === proj.topProjectId);
+  const hd = hp && (hp.docs || []).find(x => x.id === proj.docId);
+  if (hd) hd.title = title;
   toast(ok ? '✓ Dokumentum adatai mentve' : '⚠ Mentés sikertelen', ok ? 'ok' : 'err');
 }
 

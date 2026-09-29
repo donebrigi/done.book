@@ -1,4 +1,4 @@
-// ── Nézetváltás: Kezdőlap / Projekt / Szerkesztő ──
+// ── Nézetváltás: Kezdőlap / Szerkesztő / Megjelenés ──
 function updateTopbarToolsVisibility() {
   const isEditor = state.uiView === 'editor';
   const left = document.getElementById('topbar-editor-tools-left');
@@ -11,11 +11,7 @@ function updateBreadcrumb() {
   const bar = document.getElementById('breadcrumb-bar');
   const row = document.getElementById('breadcrumb-row');
   if (!bar) return;
-  if (state.uiView === 'project') {
-    if (row) row.classList.add('visible');
-    const name = state.currentTopProjectMeta ? state.currentTopProjectMeta.name : state.currentTopProject;
-    bar.innerHTML = `<span class="crumb" onclick="showHomeView()">Kezdőlap</span><span class="crumb-sep">/</span><span class="crumb-current">${escapeHtml(name)}</span>`;
-  } else if (state.uiView === 'editor') {
+  if (state.uiView === 'editor') {
     if (row) row.classList.add('visible');
     renderDocSwitcher();
     const proj = state.projects[state.currentProject];
@@ -49,9 +45,8 @@ async function leaveThemeView() {
 function enterEditorView() {
   document.getElementById('view-theme').classList.remove('active');
   state.uiView = 'editor';
-  const home = document.getElementById('view-home'), proj = document.getElementById('view-project'), main = document.getElementById('main');
+  const home = document.getElementById('view-home'), main = document.getElementById('main');
   if (home) home.classList.remove('active');
-  if (proj) proj.classList.remove('active');
   if (main) main.style.display = 'flex';
   updateTopbarToolsVisibility();
   updateBreadcrumb();
@@ -62,84 +57,220 @@ async function showHomeView() {
   if (!await leaveThemeView()) return;
   if (state.uiView === 'editor' && hasUnsavedWork()) saveAllDirty({ quiet: true }); // kilépés előtt minden felmegy
   state.uiView = 'home';
-  state.currentTopProject = null;
-  state.currentTopProjectMeta = null;
-  const home = document.getElementById('view-home'), proj = document.getElementById('view-project'), main = document.getElementById('main');
+  const home = document.getElementById('view-home'), main = document.getElementById('main');
   if (main) main.style.display = 'none';
-  if (proj) proj.classList.remove('active');
   if (home) home.classList.add('active');
   updateTopbarToolsVisibility();
   updateBreadcrumb();
   state.homeProjects = null;
-  document.getElementById('home-grid').innerHTML = '<div class="hp-empty">Betöltés...</div>';
   renderHomeGrid();
   state.homeProjects = await cloudListTopProjects();
+  syncHomeFolderMeta();
   renderHomeGrid();
 }
 
-// ── Kezdőlap nézetválasztó: kártyák (projektek) / lista (minden dokumentum) ──
-const HOME_VIEW_KEY = 'kk:homeView';
-function getHomeViewMode() { try { return localStorage.getItem(HOME_VIEW_KEY) === 'list' ? 'list' : 'cards'; } catch(e) { return 'cards'; } }
-function setHomeViewMode(mode) {
-  try { localStorage.setItem(HOME_VIEW_KEY, mode); } catch(e) {}
+// Egy projekt (mappa) megnyitása a Kezdőlapon: a táblázatban csak az ő dokumentumai.
+async function showProjectView(projectId) {
+  setHomeFolder(projectId);
+  await showHomeView();
+}
+
+// ── Kezdőlap: bal oldalt a projektek (mappák), középen a dokumentumok táblázata ──
+const HOME_FOLDER_KEY = 'kk:homeFolder';
+const HOME_SORT_KEY = 'kk:homeSort';
+
+function getHomeFolder() {
+  if (state.homeFolder !== undefined) return state.homeFolder;
+  try { state.homeFolder = localStorage.getItem(HOME_FOLDER_KEY) || null; } catch(e) { state.homeFolder = null; }
+  return state.homeFolder;
+}
+function setHomeFolder(projectId) {
+  state.homeFolder = projectId || null;
+  try { if (projectId) localStorage.setItem(HOME_FOLDER_KEY, projectId); else localStorage.removeItem(HOME_FOLDER_KEY); } catch(e) {}
+  syncHomeFolderMeta();
+}
+// Az új dokumentum / importálás / megjelenés a kiválasztott projektre vonatkozik.
+function syncHomeFolderMeta() {
+  const id = getHomeFolder();
+  const meta = id && (state.homeProjects || []).find(p => p.id === id);
+  if (id && state.homeProjects && !meta) { state.homeFolder = null; try { localStorage.removeItem(HOME_FOLDER_KEY); } catch(e) {} }
+  state.currentTopProject = meta ? meta.id : null;
+  state.currentTopProjectMeta = meta || null;
+}
+function selectHomeFolder(projectId) {
+  setHomeFolder(projectId);
+  const s = document.getElementById('home-search'); if (s) s.value = '';
   renderHomeGrid();
 }
 
-// Egy dokumentum-művelet (átnevezés, törlés) után a látható nézet frissítése.
-function refreshDocViews() {
-  if (state.uiView === 'home') renderHomeGrid();
-  else renderProjectDocGrid();
+function getHomeSort() {
+  try { const v = JSON.parse(localStorage.getItem(HOME_SORT_KEY) || 'null'); if (v && (v.key === 'title' || v.key === 'date')) return v; } catch(e) {}
+  return { key: 'date', dir: 'desc' };
 }
+function setHomeSort(key) {
+  const cur = getHomeSort();
+  const next = cur.key === key ? { key, dir: cur.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: key === 'date' ? 'desc' : 'asc' };
+  try { localStorage.setItem(HOME_SORT_KEY, JSON.stringify(next)); } catch(e) {}
+  renderHomeList();
+}
+
+// Egy dokumentum-művelet (átnevezés, törlés, áthelyezés) után a látható nézet frissítése.
+function refreshDocViews() { if (state.uiView === 'home') renderHomeGrid(); }
 
 function renderHomeGrid() {
-  const mode = getHomeViewMode();
-  document.querySelectorAll('#home-view-toggle button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-  const search = document.getElementById('home-search');
-  search.placeholder = mode === 'list' ? '🔍 Keresés dokumentumok között...' : '🔍 Keresés projektek között...';
-  document.getElementById('home-title').textContent = mode === 'list' ? 'Dokumentumok' : 'Projektek';
-  document.getElementById('home-grid').style.display = mode === 'cards' ? '' : 'none';
-  document.getElementById('home-list').style.display = mode === 'list' ? '' : 'none';
-  if (mode === 'list') renderHomeList(); else renderHomeCards();
+  renderHomeFolders();
+  renderHomeHeader();
+  renderHomeList();
+}
+
+function sortedHomeProjects() {
+  return (state.homeProjects || []).slice().sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id, 'hu', { sensitivity: 'base' }));
+}
+
+function renderHomeFolders() {
+  const host = document.getElementById('home-folders');
+  if (!host) return;
+  if (!state.homeProjects) { host.innerHTML = '<div class="hf-empty">Betöltés...</div>'; return; }
+  const cur = getHomeFolder();
+  const total = state.homeProjects.reduce((n, p) => n + (p.docs || []).length, 0);
+  let html = `<div class="hf-item hf-all${!cur ? ' active' : ''}" data-id="">
+      <span class="hf-icon">📚</span><span class="hf-name">Összes dokumentum</span><span class="hf-count">${total}</span></div>
+    <div class="hf-sep"></div>`;
+  sortedHomeProjects().forEach(p => {
+    html += `<div class="hf-item${cur === p.id ? ' active' : ''}" data-id="${escapeHtml(p.id)}" title="${escapeHtml(p.name)}">
+      <span class="hf-icon" style="background:${p.color}22;color:${p.color}">${escapeHtml(p.icon)}</span>
+      <span class="hf-name">${escapeHtml(p.name)}</span><span class="hf-count">${(p.docs || []).length}</span></div>`;
+  });
+  if (!state.homeProjects.length) html += '<div class="hf-empty">Még nincs projekt.</div>';
+  host.innerHTML = html;
+  host.querySelectorAll('.hf-item').forEach(el => {
+    const id = el.dataset.id || null;
+    el.onclick = () => selectHomeFolder(id);
+    if (!id) return;
+    // Dokumentum ráhúzása egy mappára = áthelyezés abba a projektbe
+    el.addEventListener('dragover', e => {
+      if (!state._dragDoc || state._dragDoc.projectId === id) return;
+      e.preventDefault(); e.dataTransfer.dropEffect = 'move'; el.classList.add('drop-target');
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('drop-target'));
+    el.addEventListener('drop', e => {
+      e.preventDefault(); el.classList.remove('drop-target');
+      const src = state._dragDoc; state._dragDoc = null;
+      if (src && src.projectId !== id) moveDocToProject(src.projectId, src.docId, src.title, id);
+    });
+  });
+}
+
+function renderHomeHeader() {
+  const host = document.getElementById('home-header');
+  if (!host) return;
+  const cur = getHomeFolder();
+  const meta = cur && (state.homeProjects || []).find(p => p.id === cur);
+  const lastUpdate = docs => docs.map(d => d.updatedAt).filter(Boolean).sort().pop();
+  if (!meta) {
+    const all = (state.homeProjects || []).flatMap(p => p.docs || []);
+    const lu = lastUpdate(all);
+    host.innerHTML = `<div class="hh-card">
+      <div class="hh-top">
+        <div class="hh-icon">📚</div>
+        <div class="hh-titles"><h1>Összes dokumentum</h1>
+          <div class="hh-desc">Minden projekt minden dokumentuma egy helyen. Bal oldalt egy projektre kattintva csak az ő dokumentumai látszanak. Egy dokumentumot a bal oldali projektre húzva áthelyezheted.</div></div>
+      </div>
+      <div class="hh-stats">${state.homeProjects ? `<span><b>${state.homeProjects.length}</b> projekt</span><span><b>${all.length}</b> dokumentum</span>${lu ? `<span>utoljára frissítve: <b>${escapeHtml(formatRelativeDate(lu))}</b></span>` : ''}` : 'Betöltés...'}</div>
+    </div>`;
+    return;
+  }
+  const docs = meta.docs || [];
+  const chapters = docs.reduce((n, d) => n + (d.chapterCount || 0), 0);
+  const lu = lastUpdate(docs);
+  host.innerHTML = `<div class="hh-card" style="--pc:${meta.color}">
+    <div class="hh-top">
+      <div class="hh-icon" style="background:${meta.color}22;color:${meta.color}">${escapeHtml(meta.icon)}</div>
+      <div class="hh-titles"><h1>${escapeHtml(meta.name)}</h1>
+        <div class="hh-desc">${meta.description ? escapeHtml(meta.description) : '<span class="hh-muted">Nincs leírás — a ✏ gombbal adhatsz meg egy rövid összefoglalót a projektről.</span>'}</div></div>
+      <div class="hh-actions">
+        <button class="btn" data-act="theme" title="A projekt összes dokumentumának megjelenése (színek, logó)">🎨 Megjelenés</button>
+        <button class="btn-sm" data-act="edit" title="Projekt szerkesztése (név, leírás, ikon, szín)">✏</button>
+        <button class="btn-sm" data-act="import" title="Importálás: egy projektmappa vagy egy letöltött ZIP kicsomagolt mappája felvétele ide, dokumentumként">📤</button>
+        <button class="btn-sm del" data-act="del" title="Projekt törlése (minden dokumentumával együtt)">🗑</button>
+        <button class="btn primary" data-act="new" title="Új dokumentum ebben a projektben">+ Új dokumentum</button>
+      </div>
+    </div>
+    <div class="hh-stats"><span><b>${docs.length}</b> dokumentum</span><span><b>${chapters}</b> fejezet</span>${lu ? `<span>utoljára frissítve: <b>${escapeHtml(formatRelativeDate(lu))}</b></span>` : ''}</div>
+  </div>`;
+  host.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
+    const act = b.dataset.act;
+    if (act === 'theme') openThemeView(meta.id, 'project');
+    else if (act === 'edit') openEditTopProjectModal(meta);
+    else if (act === 'import') openImportModal();
+    else if (act === 'del') deleteTopProjectFromHome(meta.id, meta.name);
+    else if (act === 'new') openNewDocModal();
+  });
 }
 
 function renderHomeList() {
   const host = document.getElementById('home-list');
+  if (!host) return;
+  if (!state.homeProjects) { host.innerHTML = '<div class="hp-empty">Betöltés...</div>'; return; }
+  const cur = getHomeFolder();
   const q = (document.getElementById('home-search').value || '').trim().toLowerCase();
   const rows = [];
-  (state.homeProjects || []).forEach(p => (p.docs || []).forEach(d => rows.push({ p, d })));
-  const filtered = rows.filter(({ p, d }) => !q || d.title.toLowerCase().includes(q) || p.name.toLowerCase().includes(q));
-  filtered.sort((a, b) => a.p.name.localeCompare(b.p.name, 'hu') || a.d.title.localeCompare(b.d.title, 'hu'));
-  if (!state.homeProjects) { host.innerHTML = '<div class="hp-empty">Betöltés...</div>'; return; }
+  state.homeProjects.forEach(p => { if (!cur || p.id === cur) (p.docs || []).forEach(d => rows.push({ p, d })); });
+  const filtered = rows.filter(({ p, d }) => !q || (d.title || '').toLowerCase().includes(q) || (p.name || '').toLowerCase().includes(q));
+  const sort = getHomeSort();
+  const mul = sort.dir === 'asc' ? 1 : -1;
+  filtered.sort((a, b) => sort.key === 'title'
+    ? mul * (a.d.title || a.d.id).localeCompare(b.d.title || b.d.id, 'hu', { sensitivity: 'base' })
+    : mul * String(a.d.updatedAt || '').localeCompare(String(b.d.updatedAt || '')));
+  const countEl = document.getElementById('home-count');
+  if (countEl) countEl.textContent = filtered.length + ' dokumentum';
   if (!filtered.length) {
-    host.innerHTML = `<div class="hp-empty">${q ? 'Nincs találat "' + escapeHtml(q) + '" keresésre.' : 'Még nincs dokumentum.'}</div>`;
+    host.innerHTML = `<div class="hp-empty">${q ? 'Nincs találat "' + escapeHtml(q) + '" keresésre.' : (cur ? 'Ebben a projektben még nincs dokumentum — hozz létre egyet a „+ Új dokumentum” gombbal.' : 'Még nincs dokumentum.')}</div>`;
     return;
   }
+  const arrow = key => sort.key === key ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : '';
+  const fmtDate = iso => { try { return new Date(iso).toLocaleString('hu-HU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch(e) { return iso; } };
   host.innerHTML = `<table class="doc-table">
-    <thead><tr><th>Cím</th><th>Projekt</th><th class="dt-actions-h"></th></tr></thead>
+    <thead><tr>
+      <th class="dt-sort" data-sort="title" title="Rendezés cím szerint">Cím${arrow('title')}</th>
+      <th>Projekt</th>
+      <th class="dt-sort" data-sort="date" title="Rendezés az utolsó módosítás dátuma szerint">Dátum${arrow('date')}</th>
+      <th class="dt-c">PDF</th><th class="dt-c">HTML</th><th class="dt-c">Link</th><th></th><th></th><th></th>
+    </tr></thead>
     <tbody>${filtered.map(({ p, d }, i) => `
-      <tr data-i="${i}">
-        <td class="dt-title"><a href="#" data-act="open">${escapeHtml(d.title)}</a>
-          <div class="dt-meta">${escapeHtml([d.chapterCount + ' fejezet', d.updatedAt ? 'frissítve ' + formatRelativeDate(d.updatedAt) : ''].filter(Boolean).join(' · '))}</div></td>
+      <tr data-i="${i}" draggable="true" title="Húzd egy bal oldali projektre az áthelyezéshez">
+        <td class="dt-title"><span class="dt-grip" aria-hidden="true">⋮⋮</span><a href="#" data-act="open">${escapeHtml(d.title)}</a>
+          <div class="dt-meta">${d.chapterCount} fejezet</div></td>
         <td class="dt-project"><span class="dt-dot" style="background:${p.color}"></span><a href="#" data-act="project">${escapeHtml(p.icon)} ${escapeHtml(p.name)}</a></td>
-        <td class="dt-actions">
-          <button class="btn primary btn-xs" data-act="open">Megnyitás</button>
-          <button class="btn-sm" data-act="rename" title="Átnevezés">✏</button>
-          <button class="btn-sm" data-act="move" title="Áthelyezés másik projektbe">➡️</button>
-          <button class="btn-sm" data-act="html" title="A kész kézikönyv letöltése HTML-ben (mindig az aktuális állapot)">⬇ HTML</button>
-          <button class="btn-sm" data-act="pdf" title="PDF letöltése (mindig az aktuális állapot)">⬇ PDF</button>
-          <button class="btn-sm" data-act="link" title="Megnyitás új lapon — a megosztható link a vágólapra is kerül">🔗</button>
-          <button class="btn-sm del" data-act="del" title="Törlés">🗑</button>
-        </td>
+        <td class="dt-date" title="${d.updatedAt ? escapeHtml(fmtDate(d.updatedAt)) : ''}">${d.updatedAt ? escapeHtml(formatRelativeDate(d.updatedAt)) : '—'}</td>
+        <td class="dt-c"><button class="btn-sm" data-act="pdf" title="PDF letöltése (mindig az aktuális állapot)">⬇ PDF</button></td>
+        <td class="dt-c"><button class="btn-sm" data-act="html" title="A kész kézikönyv letöltése HTML-ben (mindig az aktuális állapot)">⬇ HTML</button></td>
+        <td class="dt-c"><button class="btn-sm" data-act="link" title="Megnyitás új lapon — a megosztható link a vágólapra is kerül">🔗</button></td>
+        <td class="dt-c"><button class="btn primary btn-xs" data-act="open">Megnyitás</button></td>
+        <td class="dt-c"><button class="btn-sm" data-act="rename" title="Átnevezés">✏</button></td>
+        <td class="dt-c"><button class="btn-sm del" data-act="del" title="Törlés">🗑</button></td>
       </tr>`).join('')}</tbody></table>`;
+  host.querySelectorAll('th[data-sort]').forEach(th => th.onclick = () => setHomeSort(th.dataset.sort));
   host.querySelectorAll('tr[data-i]').forEach(tr => {
     const { p, d } = filtered[+tr.dataset.i];
+    tr.addEventListener('dragstart', e => {
+      state._dragDoc = { projectId: p.id, docId: d.id, title: d.title };
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', d.title); } catch(err) {}
+      tr.classList.add('dragging');
+      document.getElementById('home-folders').classList.add('drag-active');
+    });
+    tr.addEventListener('dragend', () => {
+      tr.classList.remove('dragging');
+      document.getElementById('home-folders').classList.remove('drag-active');
+      setTimeout(() => { state._dragDoc = null; }, 0);
+    });
     tr.querySelectorAll('[data-act]').forEach(el => el.onclick = e => {
       e.preventDefault();
       const act = el.dataset.act;
       if (act === 'open') cloudLoadProject(p.id + '/' + d.id, p.id, d.id);
-      else if (act === 'project') showProjectView(p.id);
+      else if (act === 'project') selectHomeFolder(p.id);
       else if (act === 'rename') renameDocInProject(p.id, d.id, d.title);
-      else if (act === 'move') openMoveDocModal(p.id, d.id, d.title);
       else if (act === 'html') downloadDocHtml(p.id, d.id);
       else if (act === 'pdf') downloadDocPdf(p.id, d.id, d.title);
       else if (act === 'link') copyDocShareLink(p.id, d.id);
@@ -148,127 +279,20 @@ function renderHomeList() {
   });
 }
 
-function renderHomeCards() {
-  const grid = document.getElementById('home-grid');
-  if (!grid) return;
-  const searchInput = document.getElementById('home-search');
-  const q = (searchInput ? searchInput.value : '').trim().toLowerCase();
-  const list = (state.homeProjects || []).filter(p => !q || p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q));
-  grid.innerHTML = '';
-  if (!list.length) {
-    const msg = q ? ('Nincs találat "' + escapeHtml(q) + '" keresésre.') : 'Még nincs projekt — hozz létre egyet lent.';
-    grid.innerHTML = `<div class="hp-empty" style="grid-column:1/-1">${msg}</div>`;
-  } else {
-    list.forEach(p => {
-      const openProj = () => showProjectView(p.id);
-      const card = document.createElement('div');
-      card.className = 'hp-card';
-      card.onclick = openProj;
-      card.innerHTML = `
-        <div class="accent-bar" style="background:${p.color}"></div>
-        <div class="hp-count" style="background:${p.color}22;color:${p.color}" title="${p.docCount || 0} dokumentum">${p.docCount || 0}</div>
-        <div class="hp-card-head">
-          <div class="hp-card-icon" style="background:${p.color}22;color:${p.color}">${escapeHtml(p.icon)}</div>
-          <div class="hp-card-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
-        </div>
-        <div class="hp-card-desc">${escapeHtml(p.description || '')}</div>
-        <div class="hp-actions-row">
-          <button class="btn-sm hp-proj-edit-btn" title="Projekt szerkesztése (név, leírás, ikon, szín)">✏</button>
-          <button class="btn-sm hp-proj-theme-btn" title="Megjelenés — a projekt összes dokumentumára érvényes">🎨</button>
-          <button class="btn-sm del hp-proj-del-btn" title="Projekt törlése">🗑</button>
-          <button class="btn primary hp-proj-open-btn">Megnyitás</button>
-        </div>
-      `;
-      card.querySelector('.hp-proj-edit-btn').onclick = (e) => { e.stopPropagation(); openEditTopProjectModal(p); };
-      card.querySelector('.hp-proj-theme-btn').onclick = (e) => { e.stopPropagation(); openThemeView(p.id, 'home'); };
-      card.querySelector('.hp-proj-del-btn').onclick = (e) => { e.stopPropagation(); deleteTopProjectFromHome(p.id, p.name); };
-      card.querySelector('.hp-proj-open-btn').onclick = (e) => { e.stopPropagation(); openProj(); };
-      grid.appendChild(card);
-    });
+// Dokumentum áthelyezése másik projektbe (a táblázat sorának ráhúzásával egy mappára).
+async function moveDocToProject(fromProjectId, docId, title, toProjectId) {
+  const to = (state.homeProjects || []).find(p => p.id === toProjectId);
+  toast(`➡️ „${title || docId}” áthelyezése ide: ${to ? to.name : toProjectId}...`, 'ok', 4000);
+  const result = await cloudMoveDocument(fromProjectId, docId, toProjectId);
+  if (!result.ok) {
+    toast(result.reason === 'exists' ? 'A célprojektben már van ilyen azonosítójú dokumentum!' : '⚠ Áthelyezés sikertelen', 'err', 4000);
+    return;
   }
-  const newCard = document.createElement('div');
-  newCard.className = 'hp-card hp-new-card';
-  newCard.onclick = openNewTopProjectModal;
-  newCard.innerHTML = '<div class="plus">+</div><div>Új projekt</div>';
-  grid.appendChild(newCard);
-}
-
-async function showProjectView(projectId) {
-  if (!await leaveThemeView()) return;
-  if (state.uiView === 'editor' && hasUnsavedWork()) saveAllDirty({ quiet: true }); // kilépés előtt minden felmegy
-  state.uiView = 'project';
-  state.currentTopProject = projectId;
-  const home = document.getElementById('view-home'), proj = document.getElementById('view-project'), main = document.getElementById('main');
-  if (main) main.style.display = 'none';
-  if (home) home.classList.remove('active');
-  if (proj) proj.classList.add('active');
-  updateTopbarToolsVisibility();
-
-  document.getElementById('project-page-title').textContent = 'Betöltés...';
-  document.getElementById('project-page-desc').textContent = '';
-  document.getElementById('project-doc-grid').innerHTML = '<div class="hp-empty" style="grid-column:1/-1">Betöltés...</div>';
-
-  let meta = (state.homeProjects || []).find(p => p.id === projectId) || await cloudGetProjectMeta(projectId);
-  if (!meta) meta = { id: projectId, name: projectId, description: '', color: PROJECT_COLORS[0], icon: PROJECT_ICONS[0] };
-  state.currentTopProjectMeta = meta;
-
-  document.getElementById('project-page-title').textContent = meta.name;
-  document.getElementById('project-page-desc').textContent = meta.description || '';
-  updateBreadcrumb();
-
-  state.projectDocs = await cloudListDocuments(projectId);
-  renderProjectDocGrid();
-}
-
-function renderProjectDocGrid() {
-  const grid = document.getElementById('project-doc-grid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  const docs = state.projectDocs || [];
-  if (!docs.length) {
-    grid.innerHTML = '<div class="hp-empty" style="grid-column:1/-1">Ebben a projektben még nincs dokumentum — hozz létre egyet lent.</div>';
-  } else {
-    const projectId = state.currentTopProject;
-    docs.forEach(d => {
-      const openDoc = () => cloudLoadProject(projectId + '/' + d.id, projectId, d.id);
-      const card = document.createElement('div');
-      card.className = 'hp-card';
-      card.onclick = openDoc;
-      const meta = d.updatedAt ? 'frissítve ' + formatRelativeDate(d.updatedAt) : '';
-      const pc = (state.currentTopProjectMeta && state.currentTopProjectMeta.color) || 'var(--accent)';
-      card.innerHTML = `
-        <div class="hp-count" style="background:color-mix(in srgb, ${pc} 14%, transparent);color:${pc}" title="${d.chapterCount} fejezet">${d.chapterCount}</div>
-        <div class="hp-card-head">
-          <div class="hp-card-icon" style="background:var(--bg3);color:var(--text2)">📘</div>
-          <div class="hp-card-title" title="${escapeHtml(d.title)}">${escapeHtml(d.title)}</div>
-        </div>
-        <div class="hp-card-desc">${escapeHtml(meta)}</div>
-        <div class="hp-actions-row">
-          <button class="btn-sm hp-doc-edit-btn" title="Átnevezés">✏</button>
-          <button class="btn-sm hp-doc-move-btn" title="Áthelyezés másik projektbe">➡️</button>
-          <button class="btn-sm hp-doc-dl-btn" title="A kész kézikönyv letöltése HTML-ben (mindig az aktuális állapot)">HTML</button>
-          <button class="btn-sm hp-doc-pdf-btn" title="PDF letöltése (mindig az aktuális állapot)">PDF</button>
-          <button class="btn-sm hp-doc-link-btn" title="Megnyitás új lapon — a megosztható link a vágólapra is kerül (csak bejelentkezett felhasználók nyithatják meg)">🔗</button>
-          <button class="btn-sm del hp-doc-del-btn" title="Dokumentum törlése">🗑</button>
-          <button class="btn primary hp-doc-open-btn">Megnyitás</button>
-        </div>
-      `;
-      card.querySelector('.hp-doc-edit-btn').onclick = (e) => { e.stopPropagation(); renameDocInProject(projectId, d.id, d.title); };
-      card.querySelector('.hp-doc-move-btn').onclick = (e) => { e.stopPropagation(); openMoveDocModal(projectId, d.id, d.title); };
-      card.querySelector('.hp-doc-dl-btn').onclick = (e) => { e.stopPropagation(); downloadDocHtml(projectId, d.id); };
-      card.querySelector('.hp-doc-pdf-btn').onclick = (e) => { e.stopPropagation(); downloadDocPdf(projectId, d.id, d.title); };
-      card.querySelector('.hp-doc-link-btn').onclick = (e) => { e.stopPropagation(); copyDocShareLink(projectId, d.id); };
-      card.querySelector('.hp-doc-del-btn').onclick = (e) => { e.stopPropagation(); deleteDocInProject(projectId, d.id, d.title); };
-      card.querySelector('.hp-doc-open-btn').onclick = (e) => { e.stopPropagation(); openDoc(); };
-      grid.appendChild(card);
-    });
-  }
-  const newCard = document.createElement('div');
-  newCard.className = 'hp-card hp-new-card';
-  newCard.style.minHeight = '68px';
-  newCard.onclick = (e) => { e.stopPropagation(); openNewDocModal(); };
-  newCard.innerHTML = '<div style="display:flex;align-items:center;gap:10px"><span class="plus" style="font-size:20px">+</span><span>Új dokumentum</span></div>';
-  grid.appendChild(newCard);
+  await forgetLocalCopy(fromProjectId + '/' + docId); // ha a régi helyéről meg volt nyitva
+  toast('✓ Dokumentum áthelyezve');
+  state.homeProjects = await cloudListTopProjects();
+  syncHomeFolderMeta();
+  renderHomeGrid();
 }
 
 // ── Új Projekt modal (szín/ikon választóval) ──
@@ -342,10 +366,6 @@ async function saveTopProject() {
     if (entry) { entry.name = name; entry.description = desc; entry.color = state.ntpColor; entry.icon = state.ntpIcon; }
     if (state.currentTopProject === id) {
       state.currentTopProjectMeta = { ...(state.currentTopProjectMeta || {}), id, name, description: desc, color: state.ntpColor, icon: state.ntpIcon };
-      if (state.uiView === 'project') {
-        document.getElementById('project-page-title').textContent = name;
-        document.getElementById('project-page-desc').textContent = desc;
-      }
       updateBreadcrumb();
     }
     if (state.uiView === 'home') renderHomeGrid();
@@ -384,6 +404,7 @@ async function deleteTopProjectFromHome(projectId, name) {
   }
 
   state.homeProjects = (state.homeProjects || []).filter(p => p.id !== projectId);
+  if (getHomeFolder() === projectId) setHomeFolder(null);
   renderHomeGrid();
   toast('✓ Projekt törölve');
 }
@@ -403,7 +424,8 @@ async function createDocInProject() {
   const id = document.getElementById('nd-id').value.trim().replace(/\s+/g, '-');
   const title = document.getElementById('nd-title').value.trim();
   if (!id) { toast('Add meg a dokumentum azonosítóját!', 'err'); return; }
-  if ((state.projectDocs || []).find(d => d.id === id)) { toast('Már létezik ilyen azonosítójú dokumentum ebben a projektben!', 'err'); return; }
+  const hp0 = (state.homeProjects || []).find(p => p.id === projectId);
+  if (((hp0 && hp0.docs) || []).find(d => d.id === id)) { toast('Már létezik ilyen azonosítójú dokumentum ebben a projektben!', 'err'); return; }
 
   const config = { title: title || id, subtitle: title || id, description: '', lang: 'hu', output: id + '.html' };
   const starterRaw = '---\nid: bevezetes\ntitle: Bevezetés\n---\n\n# Bevezetés\n\n';
@@ -443,65 +465,8 @@ async function renameDocInProject(projectId, docId, currentTitle) {
   const hp = (state.homeProjects || []).find(p => p.id === projectId);
   const hd = hp && (hp.docs || []).find(x => x.id === docId);
   if (hd) hd.title = trimmed;
-  if (state.projectDocs) {
-    const d = state.projectDocs.find(x => x.id === docId);
-    if (d) d.title = trimmed;
-  }
   refreshDocViews();
   toast('✓ Átnevezve');
-}
-
-async function openMoveDocModal(projectId, docId, title) {
-  state.moveDocSource = { projectId, docId, title };
-  const sel = document.getElementById('move-doc-target-select');
-  sel.innerHTML = '<option value="">Betöltés...</option>';
-  document.getElementById('move-doc-modal-backdrop').classList.add('open');
-
-  // Friss (nem cache-elt) Projekt-lista, docCount nélkül — itt csak a névre van szükség,
-  // nem érdemes minden Projekt összes Dokumentumát is végignézni csak egy legördülőhöz.
-  const ids = (await cloudListProjectIds()).filter(id => id !== projectId);
-  const others = [];
-  for (const id of ids) {
-    const m = await cloudGetProjectMeta(id);
-    others.push(m || { id, name: id });
-  }
-  if (!others.length) {
-    sel.innerHTML = '<option value="">— nincs másik projekt —</option>';
-  } else {
-    sel.innerHTML = '';
-    others.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.name;
-      sel.appendChild(opt);
-    });
-  }
-}
-function closeMoveDocModal() {
-  document.getElementById('move-doc-modal-backdrop').classList.remove('open');
-  state.moveDocSource = null;
-}
-async function runMoveDoc() {
-  const src = state.moveDocSource;
-  if (!src) return;
-  const toProjectId = document.getElementById('move-doc-target-select').value;
-  if (!toProjectId) { toast('Válassz célprojektet!', 'err'); return; }
-
-  toast('➡️ Áthelyezés folyamatban...', 'ok', 4000);
-  const result = await cloudMoveDocument(src.projectId, src.docId, toProjectId);
-  if (!result.ok) {
-    toast(result.reason === 'exists' ? 'A célprojektben már van ilyen azonosítójú dokumentum!' : '⚠ Áthelyezés sikertelen', 'err', 4000);
-    return;
-  }
-  closeMoveDocModal();
-
-  // Ha épp meg volt nyitva a szerkesztőben a forrás helyről, zárjuk be onnan.
-  await forgetLocalCopy(src.projectId + '/' + src.docId);
-
-  state.homeProjects = null; // mindkét projekt dokumentumszáma változott
-  toast('✓ Dokumentum áthelyezve');
-  if (state.uiView === 'home') await showHomeView(); // a lista frissül
-  else await showProjectView(src.projectId); // a forrás Projekt nézete frissül, a dokumentum eltűnik belőle
 }
 
 async function deleteDocInProject(projectId, docId, title) {
@@ -512,7 +477,6 @@ async function deleteDocInProject(projectId, docId, title) {
 
   await forgetLocalCopy(projectId + '/' + docId);
 
-  state.projectDocs = (state.projectDocs || []).filter(d => d.id !== docId);
   const hp2 = (state.homeProjects || []).find(p => p.id === projectId);
   if (hp2 && hp2.docs) { hp2.docs = hp2.docs.filter(d => d.id !== docId); hp2.docCount = hp2.docs.length; }
   refreshDocViews();

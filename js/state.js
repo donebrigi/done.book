@@ -18,13 +18,12 @@ const state = {
   previewTimer: null,
   previewRenderKey: null, // az utolsó előnézet-render "kulcsa" (dokumentum) — ha nem változik, megmarad a görgetési pozíció
   // Kezdőlap / Projekt-Dokumentum hierarchia
-  uiView: 'home',              // 'home' | 'project' | 'editor'
+  uiView: 'home',              // 'home' | 'editor' | 'theme'
   currentTopProject: null,     // Projekt azonosító (mappa neve)
   currentTopProjectMeta: null, // { id, name, description, color, icon, docCount }
   homeProjects: null,          // kezdőlap kártyák cache-e
-  projectDocs: null,           // az aktuális Projekt dokumentumainak cache-e
+  homeFolder: undefined,       // a Kezdőlapon kiválasztott projekt (mappa); null = összes dokumentum
   editingProjectId: null,      // ha nem null, az "Új/szerkesztés Projekt" modal szerkeszt, nem létrehoz
-  moveDocSource: null,         // { projectId, docId, title } — a "Dokumentum áthelyezése" modal forrása
   isAuthed: false,
   booting: true,               // amíg igaz, az auth-változás nem navigál (az initApp dönt)
   pendingCloudResume: null,    // bejelentkezés után visszanyitandó Dokumentum

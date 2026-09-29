@@ -17,9 +17,7 @@ Ez egy **minta oldal**: itt látszik, hogyan fognak kinézni a projekt dokumentu
 
 ### Címsor 3
 
-#### Címsor 4
-
-##### Címsor 5`,
+Egy [link másik oldalra](https://example.com) a másodlagos színnel.`,
   usage: `# Használat
 
 ## Lépések
@@ -56,7 +54,7 @@ Rövid bekezdés a harmadik fejezetben, egy [külső hivatkozással](https://exa
 };
 
 function sampleImageDataUrl(v) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="360"><rect width="800" height="360" fill="#eef1f5"/><rect x="0" y="0" width="800" height="44" fill="${v.accent}"/><rect x="24" y="72" width="220" height="264" rx="10" fill="#ffffff"/><rect x="268" y="72" width="508" height="120" rx="10" fill="#ffffff"/><rect x="268" y="212" width="508" height="124" rx="10" fill="#ffffff"/><text x="400" y="140" font-family="sans-serif" font-size="22" fill="#9aa3af" text-anchor="middle">Képernyőkép</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="360"><rect width="800" height="360" fill="#eef1f5"/><rect x="0" y="0" width="800" height="44" fill="${v.primary}"/><rect x="24" y="72" width="220" height="264" rx="10" fill="#ffffff"/><rect x="268" y="72" width="508" height="120" rx="10" fill="#ffffff"/><rect x="268" y="212" width="508" height="124" rx="10" fill="#ffffff"/><text x="400" y="140" font-family="sans-serif" font-size="22" fill="#9aa3af" text-anchor="middle">Képernyőkép</text></svg>`;
   return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 }
 
@@ -111,7 +109,7 @@ async function openThemeView(projectId, returnTo) {
   TV.savedLogo = logoMigrated ? null : logo; // átvett logónál a Mentés véglegesíti
 
   state.uiView = 'theme';
-  ['view-home', 'view-project'].forEach(id => document.getElementById(id).classList.remove('active'));
+  ['view-home'].forEach(id => document.getElementById(id).classList.remove('active'));
   document.getElementById('main').style.display = 'none';
   document.getElementById('view-theme').classList.add('active');
   updateTopbarToolsVisibility();
@@ -186,47 +184,33 @@ function renderThemeForm() {
     </div>
     <div class="tf-note-small">A bal oldali menü tetején jelenik meg, a projekt minden dokumentumában. PNG, SVG vagy JPG, ajánlott max. 200×60 px.</div>
   </div>`;
-  THEME_GROUPS.forEach(g => {
-    html += `<div class="tf-group"><div class="tf-title">${escapeHtml(g.title)}</div>`;
-    g.fields.forEach(f => {
-      const isAuto = f.auto && !v[f.key];
-      const shown = themeColor(v, f.key);
-      html += `<div class="tf-row${isAuto ? ' is-auto' : ''}" data-key="${f.key}">
-        <label>${escapeHtml(f.label)}${f.hint ? ` <span class="tf-hint">${escapeHtml(f.hint)}</span>` : ''}</label>
-        <input type="color" value="${shown}" oninput="onThemeColor('${f.key}', this.value)" title="${isAuto ? 'Automatikus — kattints a saját szín megadásához' : shown}"/>
-        <input type="text" class="tf-hex" value="${isAuto ? '' : shown}" placeholder="${isAuto ? '(auto)' : ''}" oninput="onThemeHex('${f.key}', this.value)"/>
-        ${f.auto ? `<button class="tf-auto" onclick="setThemeAuto('${f.key}')" title="Igazodjon ehhez: ${f.auto === 'accent' ? 'Kiemelő szín' : 'Szöveg'}" ${isAuto ? 'disabled' : ''}>auto</button>` : '<span class="tf-auto-spacer"></span>'}
-      </div>`;
-    });
-    html += `</div>`;
+  html += `<div class="tf-group"><div class="tf-title">Színek</div>`;
+  THEME_FIELDS.forEach(f => {
+    html += `<div class="tf-row" data-key="${f.key}">
+      <label>${escapeHtml(f.label)} <span class="tf-hint">${escapeHtml(f.hint)}</span></label>
+      <input type="color" value="${v[f.key]}" oninput="onThemeColor('${f.key}', this.value)" title="${v[f.key]}"/>
+      <input type="text" class="tf-hex" value="${v[f.key]}" oninput="onThemeHex('${f.key}', this.value)"/>
+      <span class="tf-auto-spacer"></span>
+    </div>`;
   });
+  html += `</div>`;
+  const F = THEME_FIXED;
   html += `<div class="tf-group tf-fixed"><div class="tf-title">Egységes (nem állítható)</div>
-    <div class="tf-note">Betűtípus: <b>Inter</b> (szöveg) + <b>Lexend</b> (címsorok)<br>
-    Címsorméretek: Címsor 1–5 = ${THEME_FIXED.headingSizes.join(' / ')} px<br>
-    Sarkok lekerekítése: ${THEME_FIXED.radius}<br>
-    Bekezdés betűmérete: ${THEME_TEXT_SIZE} px<br>
-    Ikonok: a kiemelő szín, ${THEME_ICON.size} px<br>
-    Kiemelt doboz: a kiemelő színből, a szöveg színével</div></div>`;
+    <div class="tf-note">Szöveg: <span class="tf-sw" style="background:${F.text}"></span>${F.text} · Másodlagos szöveg: <span class="tf-sw" style="background:${F.muted}"></span>${F.muted}<br>
+    Szegélyek: <span class="tf-sw" style="background:${F.border}"></span>${F.border}<br>
+    Betűtípus: <b>Inter</b> (szöveg) + <b>Lexend</b> (címsorok)<br>
+    Címsorméretek: Címsor 1–3 = ${F.headingSizes.join(' / ')} px<br>
+    Sarkok lekerekítése: ${F.radius} · Bekezdés: ${THEME_TEXT_SIZE} px · Ikonok: ${THEME_ICON.size} px</div></div>`;
   host.innerHTML = html;
 }
 
 function onThemeColor(key, val) {
   TV.vars[key] = val;
   const row = document.querySelector(`.tf-row[data-key="${key}"]`);
-  if (row) {
-    row.classList.remove('is-auto');
-    row.querySelector('.tf-hex').value = val;
-    const btn = row.querySelector('.tf-auto'); if (btn) btn.disabled = false;
-  }
-  // Az "automatikus" mezők színmintája az alapszínnel együtt változik.
-  if (key === 'accent' || key === 'text') refreshAutoSwatches();
+  if (row && document.activeElement !== row.querySelector('.tf-hex')) row.querySelector('.tf-hex').value = val;
   onThemeChanged();
 }
-function onThemeHex(key, val) { if (isHexColor(val)) { const row = document.querySelector(`.tf-row[data-key="${key}"] input[type=color]`); if (row) row.value = val; onThemeColor(key, val); } }
-function setThemeAuto(key) { TV.vars[key] = null; renderThemeForm(); onThemeChanged(); }
-function refreshAutoSwatches() {
-  document.querySelectorAll('.tf-row.is-auto').forEach(row => { row.querySelector('input[type=color]').value = themeColor(TV.vars, row.dataset.key); });
-}
+function onThemeHex(key, val) { val = (val || '').trim().toLowerCase(); if (isHexColor(val)) { const row = document.querySelector(`.tf-row[data-key="${key}"] input[type=color]`); if (row) row.value = val; onThemeColor(key, val); } }
 
 function onThemeChanged() {
   updateThemeDirty();

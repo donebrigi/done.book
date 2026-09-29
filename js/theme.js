@@ -3,109 +3,91 @@
 // A megjelenést nem dokumentumonként, hanem PROJEKTENKÉNT állítjuk: egy projekt minden
 // dokumentuma ugyanazt a témát kapja. Tárolás: {projektId}/_theme.json  →  { version, vars }
 //
-// Kódból rögzített (nem állítható, minden projektben egységes):
+// Állítható (4.7 óta) CSAK három szín (+ a logó, lásd themeview.js):
+//   • elsődleges:  menü, ikonok, kiemelt doboz, Címsor 1 és Címsor 3, felsorolásjelek
+//   • másodlagos:  Címsor 2 és a linkek
+//   • harmadlagos: az oldal és a kártyák háttere
+// Kódból rögzített (minden projektben egységes):
 //   • betűtípus: Inter (szöveg) + Lexend (címsorok)
-//   • címsorméretek: Címsor 1–5 (# … #####) = 32 / 28 / 24 / 20 / 18 px
-//   • sarkok lekerekítése: 14px
-//   • bekezdés 16px; ikonok és kiemelt doboz a kiemelő színnel
-// Állítható: az alapszínek és a címsorok színe (+ a logó, lásd themeview.js).
+//   • címsorok: Címsor 1–3 (# ## ###) = 32 / 28 / 24 px (a régi ####, ##### Címsor 3 lesz)
+//   • sarkok 14 px, bekezdés 16 px, ikonok 20 px
+//   • szöveg #1a1a1a, másodlagos szöveg #6b7280, szegélyek #e2e5ea
 
 const THEME_FIXED = {
   font: `'Inter',ui-sans-serif,system-ui,sans-serif`,
   head: `'Lexend',ui-sans-serif,system-ui,sans-serif`,
   google: 'family=Inter:wght@400;500;600;700&family=Lexend:wght@500;600;700',
   radius: '14px',
-  // Címsor 1–5 = a szerkesztőben #, ##, ###, ####, ##### → HTML h2…h6
-  headingSizes: [32, 28, 24, 20, 18],
+  // Címsor 1–3 = a szerkesztőben #, ##, ### → HTML h2, h3, h4
+  headingSizes: [32, 28, 24],
+  text: '#1a1a1a',
+  muted: '#6b7280',
+  border: '#e2e5ea',
 };
-
-// Alapértelmezett megjelenés (ha a projektben nincs beállítva semmi).
-const THEME_DEFAULTS = {
-  accent: '#f63900', bg: '#fafafa', card: '#ffffff', text: '#1a1a1a', muted: '#6b7280', border: '#e2e5ea',
-  h1Color: null, h2Color: null, h3Color: null, h4Color: null, h5Color: null,   // null = automatikus
-};
-
-// Kódból rögzített, a színekből számolt részek (nem állíthatók):
-//   • bekezdés betűmérete: 16px
-//   • ikonok: a kiemelő szín, 20px, 2px vonal
-//   • kiemelt doboz (> szöveg): a kiemelő színből képzett átmenet, a szöveg színével
 const THEME_TEXT_SIZE = 16;
 const THEME_ICON = { size: 20, stroke: 2 };
 
-// A beállító felület mezői (csoportosítva). auto: mihez igazodik, ha nincs külön megadva.
-const THEME_GROUPS = [
-  { title: 'Alapszínek', fields: [
-    { key: 'accent', label: 'Kiemelő szín', hint: 'linkek, menü, ikonok, kiemelt doboz' },
-    { key: 'bg', label: 'Oldal háttere' },
-    { key: 'card', label: 'Kártyák háttere' },
-    { key: 'text', label: 'Szöveg' },
-    { key: 'muted', label: 'Másodlagos szöveg', hint: 'képaláírás, leírás' },
-    { key: 'border', label: 'Szegélyek' },
-  ]},
-  { title: 'Címsorok színe', fields: [
-    { key: 'h1Color', label: 'Címsor 1', hint: '#', auto: 'accent' },
-    { key: 'h2Color', label: 'Címsor 2', hint: '##', auto: 'accent' },
-    { key: 'h3Color', label: 'Címsor 3', hint: '###', auto: 'accent' },
-    { key: 'h4Color', label: 'Címsor 4', hint: '####', auto: 'text' },
-    { key: 'h5Color', label: 'Címsor 5', hint: '#####', auto: 'text' },
-  ]},
+// Alapértelmezett színek (ha a projektben nincs beállítva semmi).
+const THEME_DEFAULTS = { primary: '#f63900', secondary: '#f63900', tertiary: '#ffffff' };
+
+// A beállító felület mezői.
+const THEME_FIELDS = [
+  { key: 'primary', label: 'Elsődleges szín', hint: 'menü, ikonok, kiemelt doboz, Címsor 1 és 3' },
+  { key: 'secondary', label: 'Másodlagos szín', hint: 'Címsor 2, linkek' },
+  { key: 'tertiary', label: 'Harmadlagos szín', hint: 'az oldal és a kártyák háttere' },
 ];
 
 const isHexColor = v => /^#[0-9a-fA-F]{6}$/.test(v || '');
 
+// A tárolt értékek egységesítése. A régi (4.6 előtti) témákat is átveszi:
+// kiemelő szín → elsődleges; a régi „Címsor 2” színe (vagy a kiemelő) → másodlagos;
+// a régi kártyaháttér → harmadlagos.
 function normalizeThemeVars(v) {
-  const out = Object.assign({}, THEME_DEFAULTS);
-  Object.keys(THEME_DEFAULTS).forEach(k => {
-    if (v && v[k] != null && v[k] !== '') out[k] = v[k];
-  });
-  ['accent', 'bg', 'card', 'text', 'muted', 'border'].forEach(k => { if (!isHexColor(out[k])) out[k] = THEME_DEFAULTS[k]; });
-  ['h1Color', 'h2Color', 'h3Color', 'h4Color', 'h5Color'].forEach(k => { if (out[k] && !isHexColor(out[k])) out[k] = null; });
-  return out;
-}
-
-// Egy mező tényleges színe (az "automatikus" mezők a hozzájuk rendelt alapszínt veszik fel).
-function themeColor(v, key) {
-  if (v[key]) return v[key];
-  const field = THEME_GROUPS.flatMap(g => g.fields).find(f => f.key === key);
-  return field && field.auto ? v[field.auto] : v[key];
+  v = v || {};
+  const pick = (...xs) => xs.find(isHexColor);
+  const primary = pick(v.primary, v.accent) || THEME_DEFAULTS.primary;
+  return {
+    primary,
+    secondary: pick(v.secondary, v.h2Color, v.accent) || (v.primary || v.accent ? primary : THEME_DEFAULTS.secondary),
+    tertiary: pick(v.tertiary, v.card) || THEME_DEFAULTS.tertiary,
+  };
 }
 
 // A téma CSS-e: alap CSS + rögzített tipográfia + a projekt színei.
 function composeThemeCss(varsIn) {
   const v = normalizeThemeVars(varsIn);
-  const c = k => themeColor(v, k);
-  const hs = THEME_FIXED.headingSizes;
-  const calloutGrad = `linear-gradient(135deg,color-mix(in srgb, ${v.accent} 35%, ${v.card}) 0%,color-mix(in srgb, ${v.accent} 12%, ${v.card}) 55%,${v.card} 100%)`;
+  const P = v.primary, S = v.secondary, T = v.tertiary, F = THEME_FIXED;
+  const hs = F.headingSizes;
+  const calloutGrad = `linear-gradient(135deg,color-mix(in srgb, ${P} 35%, ${T}) 0%,color-mix(in srgb, ${P} 12%, ${T}) 55%,${T} 100%)`;
   const ic = THEME_ICON;
   return getDefaultCSS() + `
 /* ── Rögzített tipográfia (kódból, minden projektben azonos) ── */
-:root{--font:${THEME_FIXED.font};--font-head:${THEME_FIXED.head};--radius:${THEME_FIXED.radius}}
-main h2,main h3,main h4,main h5,main h6{font-family:var(--font-head);line-height:1.25;letter-spacing:-0.01em}
+:root{--font:${F.font};--font-head:${F.head};--radius:${F.radius}}
+main h2,main h3,main h4{font-family:var(--font-head);line-height:1.25;letter-spacing:-0.01em}
 main h2{font-size:${hs[0]}px;margin:0 0 14px}
 main h3{font-size:${hs[1]}px}
 main h4{font-size:${hs[2]}px}
-main h5{font-size:${hs[3]}px}
-main h6{font-size:${hs[4]}px;margin:12px 0 6px}
 main p,main ul,main ol{font-size:${THEME_TEXT_SIZE}px}
-/* ── Projekt téma ── */
+/* ── Projekt téma: elsődleges ${P}, másodlagos ${S}, harmadlagos ${T} ── */
 :root{
-  --bg:${v.bg};--bg-elev:${v.card};--bg-card:${v.card};--text:${v.text};--muted:${v.muted};--border:${v.border};
-  --accent:${v.accent};--brand-pink-deep:${v.accent};--brand-pink:color-mix(in srgb, ${v.accent} 75%, white);
-  --accent-soft:color-mix(in srgb, ${v.accent} 12%, ${v.card});
-  --callout-bg:${calloutGrad};--callout-text:${v.text};--callout-border:${v.accent};
-  --icon-color:${v.accent};--icon-stroke-width:${ic.stroke};--icon-width:${ic.size}px;--icon-height:${ic.size}px;
+  --bg:${T};--bg-elev:${T};--bg-card:${T};--text:${F.text};--muted:${F.muted};--border:${F.border};
+  --accent:${P};--brand-pink-deep:${P};--brand-pink:color-mix(in srgb, ${P} 75%, white);
+  --accent-soft:color-mix(in srgb, ${P} 12%, ${T});
+  --callout-bg:${calloutGrad};--callout-text:${F.text};--callout-border:${P};
+  --icon-color:${P};--icon-stroke-width:${ic.stroke};--icon-width:${ic.size}px;--icon-height:${ic.size}px;
 }
-.callout{background:${calloutGrad};color:${v.text};border-left-color:${v.accent}}
-main h2{color:${c('h1Color')}}
-main h3{color:${c('h2Color')}}
-main h4{color:${c('h3Color')}}
-main h5{color:${c('h4Color')}}
-main h6{color:${c('h5Color')}}
-.brand h1{color:${v.accent}}
+.callout{background:${calloutGrad};color:${F.text};border-left-color:${P}}
+main h2{color:${P}}
+main h3{color:${S}}
+main h4{color:${P}}
+a{color:${S}}
+a:hover{color:color-mix(in srgb, ${S} 75%, black)}
+nav a,nav a:hover{color:var(--text)}
+.brand h1{color:${P}}
 .brand-logo{display:flex;align-items:center;gap:12px}
 .brand-logo h1{margin:0;min-width:0;overflow-wrap:anywhere}
 .brand-img{max-height:40px;max-width:40%;width:auto;display:block;flex-shrink:0}
-.mdi svg{width:${ic.size}px;height:${ic.size}px;stroke:${v.accent};stroke-width:${ic.stroke};color:${v.accent}}
+.mdi svg{width:${ic.size}px;height:${ic.size}px;stroke:${P};stroke-width:${ic.stroke};color:${P}}
 ` + MADE_BY_CSS;
 }
 
@@ -146,14 +128,7 @@ function themeVarsFromLegacyCss(cssText) {
   const m = (cssText || '').match(/\/\*\s*@kezikonyv-design-start[^*]*\*\/[\s\S]*?\/\*\s*@kezikonyv-design-end\s*\*\//);
   if (!m) return null;
   const grab = name => { const mm = m[0].match(new RegExp('--' + name + '\\s*:\\s*([^;]+);')); return mm ? mm[1].trim() : null; };
-  const out = {
-    accent: grab('accent'), bg: grab('bg'), card: grab('bg-card'), text: grab('text'), muted: grab('muted'), border: grab('border'),
-    // régen a "#" a h2-es színt kapta — eggyel eltolva vesszük át
-    h1Color: grab('h2-color'), h2Color: grab('h3-color'), h3Color: grab('h4-color'), h4Color: grab('h5-color'),
-  };
-  // A korábbi automatikus értékek (= kiemelő szín / szöveg színe) itt is automatikusak maradnak.
-  ['h1Color', 'h2Color', 'h3Color'].forEach(k => { if (out[k] === out.accent) out[k] = null; });
-  ['h4Color'].forEach(k => { if (out[k] === out.text) out[k] = null; });
+  const out = { accent: grab('accent'), card: grab('bg-card'), h2Color: grab('h3-color') };
   return normalizeThemeVars(out);
 }
 
