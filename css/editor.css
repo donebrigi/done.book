@@ -477,7 +477,7 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 /* Kezdőlap (Projekt-kártyák) és Projekt nézet (Dokumentum-kártyák): mindkettő ugyanazt a
    szélesebb, 2 oszlopos rácsot és kártyaszerkezetet használja — a szerkesztés/törlés/
    megnyitás gombok mindig láthatók, egy fix sávban a kártya alján, nem csak hoverre. */
-#project-doc-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:16px; }
+#project-doc-grid { grid-template-columns:repeat(auto-fill, minmax(370px, 1fr)); gap:12px; }
 #home-grid { grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px; }
 @media (max-width: 720px) { #home-grid, #project-doc-grid { grid-template-columns:1fr; } }
 
@@ -777,3 +777,11 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .tf-logo-actions .btn { font-size:12px; padding:4px 12px; }
 .tf-logo-del { color:var(--red); }
 .tf-note-small { font-size:11px; color:var(--text3); margin-top:8px; line-height:1.5; }
+
+/* Kész kézikönyv menüje a bal oldalon: logó és cím egy sorban (a generált oldal CSS-e a theme.js-ben) */
+
+/* Ikonválasztó: a Lucide ikonok feketék — sötét felületen világosra fordítjuk őket */
+.icon-pick { color: var(--text2); }
+.icon-pick img { filter: invert(1) brightness(.9); opacity: .9; transition: opacity .1s; }
+.icon-pick:hover { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
+.icon-pick:hover img { opacity: 1; filter: invert(1) brightness(1); }
