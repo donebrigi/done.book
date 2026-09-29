@@ -88,6 +88,7 @@ A szerkesztőben a kép-címkére (**✏ kép**) kattintva, vagy az előnézetbe
 
 ## Előnézet
 
+- Minden fejezet tetején egy **„Made by DONE” sáv** látszik (dokumentum címe + DONE logó). Ez kódból jön, nem szerkeszthető.
 - Az előnézet **mindig a teljes dokumentumot** mutatja (menüvel, keresővel), gépelés közben magától frissül.
 - Az előnézet mindig **követi a szerkesztő görgetését**: az éppen szerkesztett fejezet / bekezdés látszik benne.
 - Az előnézetben egy bekezdésre **kattintva** a szerkesztő oda ugrik (teljes dokumentum nézetben a másik fejezetet is megnyitja); egy képre **duplán kattintva** a képszerkesztő nyílik meg.
@@ -183,7 +184,7 @@ A jegyzet az **élő előnézetben** egy szaggatott keretű, elkülönülő bubo
 
 A **⚙ Beállítások** ablak fülei:
 
-- **📄 Dokumentum:** cím, alcím, rövid leírás, logó, nem használt képek törlése.
+- **📄 Dokumentum:** cím, alcím, rövid leírás, nem használt képek törlése. (A logó a projekt 🎨 Megjelenés oldalán van.)
 - **📋 Fejezetek másolása:** fejezetek átmásolása egy másik dokumentumból (a képeikkel együtt).
 
 ## Megjelenés testreszabása
@@ -195,6 +196,8 @@ A megjelenés **projekt szinten** állítható: egy projekt minden dokumentuma u
 - vagy a szerkesztőben a topbar **🎨 Megjelenés** gombjával (a megnyitott dokumentum projektjéé).
 
 Az oldalon balra a beállítások, jobbra egy **minta oldal** látszik, amin minden formázás megtalálható (címsorok, bekezdés, kiemelések, kiemelt doboz, listák, kép, táblázat, harmonika, kód, ikonok, menü, kereső) — minden módosítás rögtön látszik rajta. A **✓ Mentés** után a projekt összes dokumentuma az új megjelenést kapja.
+
+**Logó:** a Megjelenés oldal tetején tölthető fel / cserélhető / távolítható el (PNG, SVG, JPG, max. 1 MB). A projekt minden dokumentumában a bal oldali menü tetején jelenik meg, és a minta oldalon is látszik. Ha egy projektnek még nincs saját logója, az első olyan dokumentum logójából indul, amelyiknek volt; a Mentéssel lesz a projekté.
 
 **Állítható:**
 
@@ -258,9 +261,10 @@ kezikonyv (Supabase Storage bucket)
 └── <projekt-azonosító>/
     ├── _project.json          # projekt neve, leírása, színe, ikonja
     ├── _theme.json            # a projekt megjelenése (minden dokumentumára érvényes)
+    ├── _logo.txt              # a projekt logója (data URL; üres = nincs logó)
     └── <dokumentum-azonosító>/
         ├── config.json        # cím, leírás, menü (nav_groups), fejezetsorrend (fileOrder)
-        ├── logo.txt           # logó (base64 kép), opcionális
+        ├── logo.txt           # régi, dokumentumonkénti logó — csak addig él, amíg a projektnek nincs _logo.txt-je
         ├── published.html     # a legutóbb letöltött (publikált) HTML
         ├── images/            # képek (tartalom-hash névvel)
         └── sections/
@@ -325,6 +329,15 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.3 — Logó a Megjelenésben
+
+- A logó a ⚙ Beállításokból átkerült a projekt **🎨 Megjelenés** oldalára, és **projekt szintű** lett (`{projekt}/_logo.txt`): a projekt minden dokumentuma ugyanazt kapja. A minta oldalon is látszik; a színekkel együtt ment.
+- Régi dokumentumoknál a saját `logo.txt` addig marad érvényben, amíg a projektnek nincs logója; a Megjelenés oldal megnyitásakor az első ilyen logóból indul.
+
+### 4.2 — Made by DONE
+
+- Minden fejezet tetején egy fejléc-sáv: bal oldalt a dokumentum címe, jobb oldalt „Made by” + DONE logó. Kódból jön (`js/theme.js`: `DONE_LOGO_SVG`, `madeByBarHtml`, `MADE_BY_CSS`), nem szerkeszthető; megjelenik az előnézetben, a Megjelenés minta oldalán, a letöltött HTML-ben és nyomtatásban / PDF-ben is. A kereső nem talál bele.
 
 ### 4.1 — Finomítások
 
