@@ -27,7 +27,8 @@
       <div id="download-menu" class="dl-menu">
         <div class="dl-menu-title">Kész kézikönyv</div>
         <button class="btn primary" onclick="confirmDownload()" style="width:100%">⬇ HTML letöltése</button>
-        <button class="btn" onclick="confirmPrint()" style="width:100%" title="Nyomtatási nézet: minden fejezet új oldalon, tartalomjegyzékkel, kinyitott lenyíló elemekkel. PDF-hez válaszd a „Mentés PDF-ként” nyomtatót.">🖨 Nyomtatás / PDF</button>
+        <button class="btn" onclick="confirmPdf()" style="width:100%" title="PDF fájl letöltése — minden fejezet új oldalon, tartalomjegyzékkel">📄 PDF letöltése</button>
+        <button class="btn" onclick="confirmPrint()" style="width:100%" title="Nyomtatási nézet: minden fejezet új oldalon, tartalomjegyzékkel, kinyitott lenyíló elemekkel. Kereshető szövegű PDF-hez itt válaszd a „Mentés PDF-ként” nyomtatót.">🖨 Nyomtatás</button>
         <div class="dl-menu-sep"></div>
         <div class="dl-menu-title">Forrásfájlok</div>
         <button class="btn" onclick="confirmDownloadZip()" style="width:100%">📦 Markdown + képek (ZIP)</button>
@@ -439,6 +440,7 @@
 <script src="js/previewsync.js"></script>
 <script src="js/themeview.js"></script>
 <script src="js/build.js"></script>
+<script src="js/pdf.js"></script>
 <script src="js/links.js"></script>
 <script src="js/editor.js"></script>
 <script src="js/toolbar.js"></script>

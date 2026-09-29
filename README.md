@@ -225,11 +225,12 @@ A bal oldali fa egyszerre a fejezetek listája, a sorrendjük és a kész oldal 
 
 A **⬇ Letöltés** menüben:
 
-- **🖨 Nyomtatás / PDF:** nyomtatási nézet egy új lapon — tartalomjegyzékkel, minden fejezet új oldalon, kinyitott lenyíló elemekkel, menü és kereső nélkül. PDF-hez a nyomtatóválasztóban a „Mentés PDF-ként” lehetőséget válaszd. (A letöltött HTML-ből nyomtatva is ugyanígy néz ki.)
+- **📄 PDF letöltése:** kész PDF fájl, nyomtatóablak nélkül — tartalomjegyzékkel, minden fejezet új oldalon, a „Made by DONE” sávval. Chrome-ban és Edge-ben előbb megkérdezi, hová mentse; más böngészőben sima letöltésként érkezik. Az oldalak képként kerülnek a PDF-be (a szöveg nem jelölhető ki benne); hosszabb dokumentumnál fél percig is tarthat.
+- **🖨 Nyomtatás:** nyomtatási nézet egy új lapon — tartalomjegyzékkel, minden fejezet új oldalon, kinyitott lenyíló elemekkel, menü és kereső nélkül. Ha **kijelölhető / kereshető szövegű** PDF kell, itt a nyomtatóválasztóban a „Mentés PDF-ként” lehetőséget válaszd. (A letöltött HTML-ből nyomtatva is ugyanígy néz ki.)
 - **⬇ HTML letöltése:** a végleges, önálló HTML fájl (képekkel együtt).
 - **📦 Markdown + képek (ZIP):** a dokumentum összes forrásfájlja (fejezetek, képek, `config.json`, `style.css`) — archiváláshoz, vagy máshová importáláshoz.
 
-**Nem kell semmit „legenerálni”:** a kész HTML-t (letöltés, PDF, megosztott 🔗 link, a listák HTML / PDF gombjai) mindig a dokumentum aktuális állapotából állítja össze a szerkesztő, abban a pillanatban, amikor kéred. A HTML és a PDF a Projekt nézet dokumentumkártyáiról és a Kezdőlap dokumentumlistájából is letölthető, a dokumentum megnyitása nélkül.
+**Nem kell semmit „legenerálni”:** a kész HTML-t (letöltés, PDF, megosztott 🔗 link, a listák HTML / PDF gombjai) mindig a dokumentum aktuális állapotából állítja össze a szerkesztő, abban a pillanatban, amikor kéred. A HTML és a PDF (📄 letöltés) a Projekt nézet dokumentumkártyáiról és a Kezdőlap dokumentumlistájából is letölthető, a dokumentum megnyitása nélkül.
 
 Egy-egy fejezet `.md` fájlja a bal oldali fában a fejezet **⬇** gombjával tölthető le (a képek beágyazva).
 
@@ -301,7 +302,8 @@ js/
   themeview.js          # Megjelenés oldal (beállítások + minta oldal)
   preview.js            # élő előnézet, HTML összeállítás, menü
   previewsync.js        # görgetés-szinkron, kattintás az előnézetben
-  build.js              # HTML letöltés, nyomtatás/PDF, ZIP letöltés
+  build.js              # kész HTML (mindig élőben), letöltés, nyomtatás, ZIP letöltés
+  pdf.js                # 📄 PDF letöltés (html2pdf.js, vendor/)
   links.js              # link-javaslatok, hibás hivatkozások jelzése
   editor.js             # CodeMirror szerkesztő, "/" menü, kép-beillesztés
   toolbar.js            # formázó műveletek, ikonválasztó
@@ -316,6 +318,11 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.6 — Valódi PDF letöltés, link megnyitása
+
+- A **PDF** gombok (dokumentumkártya, dokumentumlista, Letöltés menü) már nem a nyomtatót nyitják meg, hanem kész PDF fájlt készítenek; Chrome-ban / Edge-ben előbb a mentés helyét kérdezik. (`js/pdf.js`, `vendor/html2pdf.bundle.min.js` — ingyenes, helyben tárolt könyvtár.) A 🖨 Nyomtatás külön megmaradt a Letöltés menüben.
+- A **🔗** gomb új lapon megnyitja a kész kézikönyvet, és a linket a vágólapra is másolja.
 
 ### 4.5 — Mindig naprakész HTML, PDF a listákban
 
