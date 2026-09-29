@@ -37,3 +37,7 @@ cp -r package/src ./h2psrc
 echo "import html2pdf from './h2psrc/index.js'; window.html2pdf = html2pdf;" > entry.js
 npx esbuild entry.js --bundle --minify --format=iife --alias:html2canvas=html2canvas-pro --outfile=html2pdf.bundle.min.js
 ```
+
+---
+
+`driver.js.iife.js` + `driver.css` — a **❓ Bemutató** (interaktív végigvezetés, js/tour.js) könyvtára: driver.js 1.8.0 (MIT). Frissítés: `npm pack driver.js`, majd a `dist/driver.js.iife.js` és `dist/driver.css` bemásolása.
