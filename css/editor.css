@@ -639,7 +639,6 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .cm-kk-note { background: rgba(251,191,36,0.08); }
 .cm-kk-acc { background: rgba(124,106,247,0.06); font-weight: 600; }
 .cm-kk-callout { border-left: 3px solid #fcd34d; }
-.cm-kk-hl { background: rgba(236,72,153,.18); border-radius: 3px; }
 .cm-kk-icon { color: #5eead4; }
 .cm-kk-img {
   display: inline-flex; align-items: center; gap: 6px; vertical-align: middle;
