@@ -24,10 +24,11 @@
   </div>
   <div class="spacer"></div>
   <span id="status"></span>
-  <!-- Jobb oldal: Beállítások / Megjelenés / Letöltés / Előnézet. (Mentés gomb nincs: minden automatikusan ment, Ctrl+S is működik.) -->
+  <!-- Jobb oldal: Dokumentum beállításai / Fejezetek másolása / Megjelenés / Letöltés / Előnézet. (Mentés gomb nincs: minden automatikusan ment, Ctrl+S is működik.) -->
   <div id="topbar-editor-tools-right" style="display:none">
     <div class="sep"></div>
-    <button class="btn" onclick="openProjModal('doc')" title="A dokumentum címe, logója, fejezetek másolása" style="padding:5px 10px;font-size:13px">⚙ Beállítások</button>
+    <button class="btn" id="btn-doc-settings" onclick="toggleDocPanel('settings')" title="A dokumentum címe, alcíme, leírása; nem használt képek törlése" style="padding:5px 10px;font-size:13px">⚙ Dokumentum beállításai</button>
+    <button class="btn" id="btn-copy-chapters" onclick="toggleDocPanel('copy')" title="Fejezetek átmásolása egy másik dokumentumból ebbe (a képeikkel együtt)" style="padding:5px 10px;font-size:13px">📋 Fejezetek másolása</button>
     <button class="btn" id="btn-design" onclick="openThemeForCurrentDoc()" title="A projekt megjelenése (színek) — a projekt minden dokumentumára érvényes" style="padding:5px 10px;font-size:13px">🎨 Megjelenés</button>
     <div class="dl-menu-wrap">
       <button class="btn primary" onclick="toggleDownloadMenu(event)" id="btn-download" title="A kész kézikönyv letöltése (HTML, PDF) vagy a forrásfájlok (ZIP)">⬇ Letöltés</button>
@@ -68,6 +69,52 @@
 
 <!-- Main -->
 <div id="main">
+
+  <!-- Bal oldali panel: ⚙ Dokumentum beállításai / 📋 Fejezetek másolása (a Megjelenéshez hasonló oldalsáv;
+       a fejezetfa, a szerkesztő és az előnézet közben is látszik). -->
+  <aside id="doc-panel" aria-hidden="true">
+    <div class="dp-head">
+      <h2 id="dp-title">⚙ Dokumentum beállításai</h2>
+      <button class="btn" onclick="closeDocPanel()" title="Bezárás (Esc)">✕</button>
+    </div>
+
+    <!-- Dokumentum beállításai -->
+    <div class="dp-body" id="dp-settings">
+      <div class="dp-sub">Csak <b>erre a dokumentumra</b> vonatkozik. A változások automatikusan mentődnek, és azonnal látszanak az előnézetben.</div>
+      <div class="form-grid" id="dp-doc-fields">
+        <label for="doc-title">Cím <span class="hint">(a dokumentumlistában, a böngészőfülön és a kész oldal tetején)</span></label>
+        <input type="text" id="doc-title" oninput="onDocSettingInput()"/>
+        <label for="doc-subtitle">Alcím <span class="hint">(a kész oldal bal felső sarkában)</span></label>
+        <input type="text" id="doc-subtitle" oninput="onDocSettingInput()"/>
+        <label for="doc-description">Rövid leírás <span class="hint">(az alcím alatt)</span></label>
+        <input type="text" id="doc-description" oninput="onDocSettingInput()"/>
+      </div>
+      <div id="doc-settings-status" class="dp-status"></div>
+      <div class="dp-note">🎨 A <b>logó</b> és a <b>színek</b> a projekt <b>Megjelenés</b> oldalán állíthatók — a projekt minden dokumentumára érvényesek.
+        <button class="btn btn-sm" onclick="closeDocPanel();openThemeForCurrentDoc()">🎨 Megjelenés megnyitása</button></div>
+      <div class="section-label" style="margin-top:18px">🧹 Képek</div>
+      <div id="dp-cleanup">
+        <button class="btn" onclick="cleanupUnusedImages()" style="font-size:12px">🧹 Nem használt képek törlése</button>
+        <div class="dp-sub" style="margin-top:6px">Törli a felhőből azokat a képfájlokat, amelyekre már egyik fejezet sem hivatkozik (pl. kicserélt vagy kitörölt képek).</div>
+      </div>
+    </div>
+
+    <!-- Fejezetek másolása -->
+    <div class="dp-body" id="dp-copy">
+      <div class="dp-sub">Fejezetek átmásolása egy <b>másik dokumentumból</b> ebbe — a képeikkel együtt. A másolatok a fejezetlista végére kerülnek; az eredeti dokumentum nem változik.</div>
+      <div class="form-grid" id="dp-copy-source">
+        <label for="copy-project-select">1. Projekt</label>
+        <select id="copy-project-select" onchange="loadCopyDocs()"></select>
+        <label for="copy-doc-select">2. Dokumentum</label>
+        <select id="copy-doc-select" onchange="loadCopyChapters()"></select>
+      </div>
+      <div class="section-label" style="margin-top:14px">3. Fejezetek kijelölése</div>
+      <div id="copy-chapters-list"><div class="hint" style="padding:8px 2px">Előbb válassz dokumentumot.</div></div>
+    </div>
+    <div class="dp-foot" id="copy-dest-row">
+      <button class="btn primary" onclick="copySelectedChapters()" id="copy-go-btn">📋 Kijelöltek másolása ide</button>
+    </div>
+  </aside>
 
   <!-- Sidebar -->
   <div id="sidebar">
@@ -130,57 +177,6 @@
 </div>
 
 <div id="toast"></div>
-
-<!-- Projekt kezelő modal -->
-<div id="proj-modal-backdrop">
-  <div id="proj-modal" onclick="event.stopPropagation()">
-    <h3>⚙ Dokumentum beállításai</h3>
-    <div class="tab-bar">
-      <button class="tab active" onclick="switchModalTab('doc')">📄 Dokumentum</button>
-      <button class="tab" onclick="switchModalTab('copy')">📋 Fejezetek másolása</button>
-    </div>
-
-    <!-- TAB: Dokumentum -->
-    <div class="tab-panel active" id="tab-doc">
-      <div class="form-grid">
-        <label>Cím <span class="hint">(a dokumentumlistában és a böngészőfülön)</span></label>
-        <input type="text" id="doc-title"/>
-        <label>Alcím <span class="hint">(a kész oldal bal felső sarkában)</span></label>
-        <input type="text" id="doc-subtitle"/>
-        <label>Rövid leírás <span class="hint">(az alcím alatt)</span></label>
-        <input type="text" id="doc-description"/>
-      </div>
-      <div style="display:flex;justify-content:flex-end;margin:10px 0 18px">
-        <button class="btn primary" onclick="saveDocSettings()">✓ Mentés</button>
-      </div>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">🖼 A logó a projekt <b>🎨 Megjelenés</b> oldalán állítható — a projekt minden dokumentumára érvényes.</div>
-      <div class="section-label" style="margin-top:14px">🧹 Képek</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="btn" onclick="cleanupUnusedImages()" style="font-size:12px">🧹 Nem használt képek törlése</button>
-        <span style="font-size:11px;color:var(--text3)">Törli a felhőből azokat a képfájlokat, amelyekre már egyik fejezet sem hivatkozik (pl. kicserélt vagy kitörölt képek).</span>
-      </div>
-    </div>
-
-    <!-- TAB: Fejezetek másolása -->
-    <div class="tab-panel" id="tab-copy">
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px">
-        Fejezetek átmásolása egy másik dokumentumból ebbe (a képeikkel együtt). A másolatok a lista végére kerülnek.
-      </div>
-      <div class="form-grid">
-        <label>Projekt</label>
-        <select id="copy-project-select" onchange="loadCopyDocs()"></select>
-        <label>Dokumentum</label>
-        <select id="copy-doc-select" onchange="loadCopyChapters()"></select>
-      </div>
-      <div id="copy-chapters-list"></div>
-      <div class="copy-dest" id="copy-dest-row" style="display:none">
-        <button class="btn primary" onclick="copySelectedChapters()" style="font-size:12px;padding:6px 16px">📋 Kijelöltek másolása ide</button>
-      </div>
-    </div>
-
-    <button id="proj-modal-close" onclick="closeProjModal()">Bezárás</button>
-  </div>
-</div>
 
 <!-- Új fejezet modal -->
 <div id="new-chapter-backdrop" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;align-items:center;justify-content:center">

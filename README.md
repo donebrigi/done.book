@@ -19,6 +19,8 @@ Nincs build lépés és nincs saját szerver: az `index.html` mellé a `css/`, `
 - [Fejezetek, csoportok, menü (bal oldali fa)](#fejezetek-csoportok-menü-bal-oldali-fa)
 - [Kezdőlap](#kezdőlap)
 - [Dokumentum beállításai](#dokumentum-beállításai)
+- [Fejezetek másolása](#fejezetek-másolása)
+- [Interaktív bemutató](#interaktív-bemutató)
 - [Megjelenés testreszabása](#megjelenés-testreszabása)
 - [Letöltés](#letöltés)
 - [Importálás](#importálás)
@@ -72,7 +74,7 @@ Bal oldalt a fejezetek fája, középen a szerkesztő, jobbra az élő előnéze
 - A kép alatti `*dőlt sor*` a képaláírás.
 - A **régi dokumentumokban** beágyazott (base64) képeket a szerkesztő az első megnyitáskor magától átalakítja külön fájllá. Ez egyszeri, és ha bármelyik kép feltöltése nem sikerül, az a kép változatlanul a szövegben marad.
 - A letöltött HTML-be és az egyedi `.md` letöltésbe a képek beágyazva kerülnek, így azok önállóan is teljesek.
-- A **⚙ Beállítások → Dokumentum → 🧹 Nem használt képek törlése** gomb eltávolítja a felhőből azokat a képfájlokat, amelyekre már egyik fejezet sem hivatkozik (a 10 percnél frissebbeket biztonságból kihagyja).
+- A **⚙ Dokumentum beállításai → 🧹 Nem használt képek törlése** gomb eltávolítja a felhőből azokat a képfájlokat, amelyekre már egyik fejezet sem hivatkozik (a 10 percnél frissebbeket biztonságból kihagyja).
 
 ## Képszerkesztő
 
@@ -166,10 +168,24 @@ Az ikonok színe mindig a projekt **kiemelő színe** (Megjelenés oldal), mére
 
 ## Dokumentum beállításai
 
-A **⚙ Beállítások** ablak fülei:
+A felső sáv **⚙ Dokumentum beállításai** gombja a Megjelenéshez hasonlóan egy **bal oldali panelt** nyit (nem felugró ablakot): közben a fejezetfa, a szerkesztő és az előnézet is látszik. Ugyanarra a gombra kattintva, a **✕** gombbal vagy **Esc**-kel bezárul.
 
-- **📄 Dokumentum:** cím, alcím, rövid leírás, nem használt képek törlése. (A logó a projekt 🎨 Megjelenés oldalán van.)
-- **📋 Fejezetek másolása:** fejezetek átmásolása egy másik dokumentumból (a képeikkel együtt).
+- **Cím** — a dokumentumlistában, a böngészőfülön és a kész oldal tetején.
+- **Alcím** — a kész oldal bal felső sarkában.
+- **Rövid leírás** — az alcím alatt.
+- **🧹 Nem használt képek törlése** — a felhőből törli azokat a képeket, amelyekre már egyik fejezet sem hivatkozik.
+
+Mentés gomb nincs: gépelés után egy pillanattal **automatikusan ment**, az előnézetben azonnal látszik, a panelen „✓ Mentve” jelzi. Üres címet nem ment el. A logó és a színek a projekt **🎨 Megjelenés** oldalán vannak (a panelről egy gombbal oda lehet ugrani).
+
+## Fejezetek másolása
+
+Külön gomb a felső sávban: **📋 Fejezetek másolása** — szintén bal oldali panelt nyit.
+
+1. Válaszd ki a **projektet**, majd a **dokumentumot**, amelyikből másolnál (bármelyik projektből lehet; az éppen nyitott dokumentum nem szerepel a listában).
+2. Jelöld be a fejezeteket (vagy **Összes kijelölése**).
+3. Kattints a panel alján a **📋 Kijelöltek másolása ide** gombra.
+
+A másolatok a képeikkel együtt a fejezetlista **végére** kerülnek — a fa a panel mellett látszik, onnan húzással a helyükre tehetők. Az eredeti dokumentum nem változik. Ha ugyanolyan fájlnevű fejezet már van, rákérdez, felülírja-e; ha csak az azonosító ütközik, a másolat `-masolat` végződést kap.
 
 ## Megjelenés testreszabása
 
@@ -209,10 +225,12 @@ Rövid, lépésenkénti bemutatók: buborékok mutatják meg a felület részeit
 | Bemutató | Mikor indul magától? | Mit mutat meg? |
 |---|---|---|
 | **Kezdőlap** | az első belépés után | projektek, Összes dokumentum, Új projekt, projekt fejléce, táblázat, egy dokumentum gombjai (húzással áthelyezés), keresés, fiók |
-| **Szerkesztő** | az első dokumentum megnyitásakor | fejezetek fája = menü, + Fejezet / + Csoport, egy fejezet gombjai (átnevezés), fejezet címe, eszköztár, „/” menü és Ctrl+V, élő előnézet, mentés és ütközés, dokumentumváltó, Megjelenés, Letöltés, külön lapos előnézet |
+| **Szerkesztő** | az első dokumentum megnyitásakor | fejezetek fája = menü, + Fejezet / + Csoport, egy fejezet gombjai (átnevezés), fejezet címe, eszköztár, „/” menü és Ctrl+V, élő előnézet, mentés és ütközés, dokumentumváltó, Dokumentum beállításai, Fejezetek másolása, Megjelenés, Letöltés, külön lapos előnézet |
+| **Dokumentum beállításai** | a panel első megnyitásakor | cím / alcím / leírás, automatikus mentés, képtakarítás |
+| **Fejezetek másolása** | a panel első megnyitásakor | honnan (projekt, dokumentum), mit (fejezetek kijelölése), másolás gomb, hová kerülnek |
 | **Megjelenés** | a Megjelenés oldal első megnyitásakor | logó, a három szín, minta oldal, Mentés |
 
-Mindegyik csak egyszer indul el magától (a böngésző megjegyzi), de bármikor újraindítható: jobb felső sarok, profil menü → **❓ Bemutató** — mindig az éppen látott oldal bemutatója indul. Bejelentkezés előtt, betöltés közben és megosztott kézikönyvnél nem jelenik meg.
+Mindegyik csak egyszer indul el magától (a böngésző megjegyzi), de bármikor újraindítható: jobb felső sarok, profil menü → **❓ Bemutató** — mindig az éppen látott oldal (vagy a nyitott bal oldali panel) bemutatója indul. Bejelentkezés előtt, betöltés közben és megosztott kézikönyvnél nem jelenik meg.
 
 **Gyakorló dokumentum:** egy importálható dokumentum (`donebook-gyakorlo` mappa) hat fejezetnyi feladattal (szöveg és formázás, fejezetek és csoportok, képek és képszerkesztő, harmonika / ikon / link / táblázat, megjelenés / letöltés / megosztás). Érdemes egy külön „Gyakorló” projektbe importálni, és mindenkinek a saját példányán dolgozni.
 
@@ -339,7 +357,7 @@ js/
   editor.js             # CodeMirror szerkesztő, "/" menü, kép-beillesztés
   toolbar.js            # formázó műveletek, ikonválasztó
   tree.js               # bal oldali fa, húzás, fejezet létrehozás/törlés/letöltés
-  project-modal.js      # ⚙ Beállítások ablak
+  project-modal.js      # bal oldali panel: ⚙ Dokumentum beállításai + 📋 Fejezetek másolása
   loaders.js            # dokumentum betöltése, importálás
   views.js              # Kezdőlap (projektek mint mappák + dokumentumtáblázat, húzással áthelyezés), projekt/dokumentum kezelés
   auth.js               # bejelentkezés, megosztott link
@@ -350,9 +368,18 @@ A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` a
 
 ## Változásnapló
 
+### 4.13 — Dokumentum beállításai oldalsávban, külön Fejezetek másolása
+
+- A **⚙ Beállítások** felugró ablak helyett **bal oldali panel** (a Megjelenéshez hasonlóan); a gomb neve **⚙ Dokumentum beállításai**. A cím / alcím / leírás **automatikusan ment**, és azonnal látszik az előnézetben (nincs külön Mentés gomb).
+- A **📋 Fejezetek másolása** saját gombot kapott a felső sávban (eddig a Beállítások ablak második fülén volt). Szintén bal oldali panel; a fejezetfa közben látszik, így a másolatok azonnal megjelennek.
+- A panelek ugyanarra a gombra kattintva, ✕-szel vagy Esc-kel zárulnak; nézet- vagy dokumentumváltáskor maguktól bezárulnak.
+- **Bemutató:** a Szerkesztő bemutatója bemutatja mindkét új gombot (16 lépés), és mindkét panelnek saját rövid bemutatója van (első megnyitáskor magától, egyébként ❓ Bemutató nyitott panel mellett).
+- A Gyakorló dokumentum és a felhasználói útmutató is frissült (fejezetmásolás és dokumentumbeállítás feladat).
+- GitHub: nincs kézzel törlendő fájl.
+
 ### 4.12 — Bemutató a szerkesztőhöz és a Megjelenéshez
 
-- Új bemutatók: **Szerkesztő** (14 lépés) és **Megjelenés** (7 lépés); első megnyitáskor magától indulnak, a ❓ Bemutató mindig az aktuális oldalét indítja.
+- Új bemutatók: **Szerkesztő** (14 lépés, 4.13 óta 16) és **Megjelenés** (7 lépés); első megnyitáskor magától indulnak, a ❓ Bemutató mindig az aktuális oldalét indítja.
 - **Gyakorló dokumentum** (importálható, `donebook-gyakorlo`): feladatok minden fő funkcióhoz.
 
 ### 4.11 — Tisztább indulás
