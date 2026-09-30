@@ -11,6 +11,7 @@ function ensureChapterMeta(fn, f) {
 }
 
 async function cloudLoadProject(folderId, topProjectId, docId) {
+  if (typeof closeDocPanel === 'function') closeDocPanel();
   if (hasUnsavedWork()) await saveAllDirty({ quiet: true });
   toast('☁️ Dokumentum betöltése...', 'ok', 2000);
 

@@ -37,10 +37,26 @@ const TOURS = {
     { element: '#preview-pane', popover: { title: 'Élő előnézet', description: 'Így fog kinézni a kész kézikönyv — gépelés közben frissül, és követi, hol tartasz. Egy bekezdésre <b>kattintva</b> a szerkesztő oda ugrik; egy képre <b>duplán kattintva</b> megnyílik a képszerkesztő (vágás, nyilak, számozás, kitakarás).', side: 'left', align: 'start' } },
     { element: '#status', popover: { title: 'Mentés', description: 'Mentés gomb nincs: minden <b>automatikusan</b> a felhőbe kerül, itt látod az állapotát. Ha „⚠ Ütközés” áll itt, egy kolléga közben ugyanazt a fejezetet módosította — kattints rá, és válaszd ki, melyik maradjon.', side: 'bottom' } },
     { element: '#doc-switcher', popover: { title: 'Dokumentumváltó', description: 'Innen egy kattintással átválthatsz bármelyik másik dokumentumra.', side: 'bottom' } },
-    { element: '#btn-design', popover: { title: 'Megjelenés', description: 'A projekt színei (elsődleges, másodlagos, harmadlagos) és logója — a projekt minden dokumentumára érvényes. A <b>⚙ Beállítások</b>-ban a dokumentum címe, alcíme és leírása van.', side: 'bottom' } },
+    { element: '#btn-doc-settings', popover: { title: 'Dokumentum beállításai', description: 'Bal oldalt nyíló panel: a dokumentum <b>címe, alcíme és rövid leírása</b> (automatikusan ment, az előnézetben azonnal látszik), valamint a <b>nem használt képek törlése</b>. Újabb kattintásra (vagy Esc-re) bezárul.', side: 'bottom' } },
+    { element: '#btn-copy-chapters', popover: { title: 'Fejezetek másolása', description: 'Kész fejezeteket hozhatsz át <b>egy másik dokumentumból</b> — akár másik projektből is —, a képeikkel együtt. Válaszd ki a projektet és a dokumentumot, jelöld be a fejezeteket, és <b>📋 Kijelöltek másolása ide</b>. A másolatok a fejezetlista végére kerülnek, az eredeti nem változik.', side: 'bottom' } },
+    { element: '#btn-design', popover: { title: 'Megjelenés', description: 'A projekt színei (elsődleges, másodlagos, harmadlagos) és logója — a projekt <b>minden</b> dokumentumára érvényes.', side: 'bottom' } },
     { element: '#btn-download', popover: { title: 'Letöltés', description: '<b>PDF</b>, <b>HTML</b>, nyomtatás és a forrásfájlok (ZIP) — mindig a dokumentum aktuális állapotából, nem kell semmit „legenerálni”.', side: 'bottom', align: 'end' } },
     { element: '#btn-preview-popout', popover: { title: 'Nagyobb hely', description: 'Az előnézet külön böngészőlapra (pl. második monitorra) tehető, így a szerkesztő kitölti a képernyőt.', side: 'bottom', align: 'end' } },
     { popover: { title: 'Jó munkát! 🚀', description: 'Ha gyakorolnál, nyisd meg a <b>Gyakorló dokumentumot</b> — feladatokkal vezet végig minden funkción. A bemutatót bármikor újraindíthatod: profil menü → <b>❓ Bemutató</b>.' } },
+  ],
+
+  // A bal oldali panelek saját, rövid bemutatója (első megnyitáskor magától indul).
+  docsettings: () => [
+    { element: '#dp-doc-fields', popover: { title: 'A dokumentum adatai', description: '<b>Cím</b>: a dokumentumlistában, a böngészőfülön és a kész oldal tetején. <b>Alcím</b> és <b>rövid leírás</b>: a kész oldal bal felső sarkában. Gépelés közben az előnézet azonnal frissül.', side: 'right', align: 'start' } },
+    { element: '#doc-settings-status', popover: { title: 'Automatikus mentés', description: 'Mentés gomb nincs — egy pillanattal a gépelés után magától ment, itt látod az állapotát. Üres címet nem ment el.', side: 'right' } },
+    { element: '#dp-cleanup', popover: { title: 'Takarítás', description: 'Törli a felhőből a már sehol nem használt képeket (pl. kicserélt képernyőképek). A logó és a színek a <b>🎨 Megjelenés</b> oldalon vannak.', side: 'right' } },
+  ],
+
+  copy: () => [
+    { element: '#dp-copy-source', popover: { title: 'Honnan másolsz?', description: 'Válaszd ki a <b>projektet</b>, majd azon belül a <b>dokumentumot</b>, amelyikből fejezeteket hoznál át. Bármelyik projektből másolhatsz — az aktuális dokumentum nem szerepel a listában.', side: 'right', align: 'start' } },
+    { element: '#copy-chapters-list', popover: { title: 'Mit másolsz?', description: 'Itt jelennek meg a kiválasztott dokumentum fejezetei — jelöld be, amelyekre szükséged van (vagy <b>Összes kijelölése</b>).', side: 'right', align: 'start' } },
+    { element: '#dp-copy', popover: { title: 'Másolás', description: 'A <b>📋 Kijelöltek másolása ide</b> gomb (a panel alján) átmásolja őket a képeikkel együtt; a fejezetlista <b>végére</b> kerülnek, onnan húzással a helyükre teheted őket. Ha ugyanilyen fejezet már van, rákérdez, felülírja-e.', side: 'right', align: 'start' } },
+    { element: '#file-list', popover: { title: 'Itt jelennek meg', description: 'A fejezetfa a panel mellett is látszik — a másolás után rögtön itt találod az új fejezeteket.', side: 'right', align: 'start' } },
   ],
 
   theme: () => [
@@ -106,13 +122,23 @@ function maybeAutoTour(name) {
   if (seen || state._tourActive || !tourAvailable(name)) return;
   setTimeout(() => {
     if (tourBlocked()) return;
-    if (state.uiView === name && !document.querySelector('.hp-modal-backdrop.open')) startTour(name);
+    if (tourContextOk(name) && !document.querySelector('.hp-modal-backdrop.open')) startTour(name);
   }, 700);
 }
 
-// Profil menü → ❓ Bemutató: az aktuális nézet bemutatója (ha ahhoz még nincs, a Kezdőlapé).
+// Mikor indulhat egy bemutató: a panelek bemutatója csak nyitott panelnél, a többi a saját nézetében.
+function tourContextOk(name) {
+  const panel = typeof docPanelOpen === 'function' ? docPanelOpen() : null;
+  if (name === 'docsettings') return state.uiView === 'editor' && panel === 'settings';
+  if (name === 'copy') return state.uiView === 'editor' && panel === 'copy';
+  return state.uiView === name;
+}
+
+// Profil menü → ❓ Bemutató: az aktuális nézet (vagy a nyitott bal oldali panel) bemutatója; ha nincs, a Kezdőlapé.
 async function startTourForCurrentView() {
   if (typeof closeProfileMenu === 'function') closeProfileMenu();
+  const panel = typeof docPanelOpen === 'function' ? docPanelOpen() : null;
+  if (state.uiView === 'editor' && panel) { startTour(panel === 'copy' ? 'copy' : 'docsettings'); return; }
   if (TOURS[state.uiView]) { startTour(state.uiView); return; }
   toast('Ehhez a nézethez még nincs bemutató — a Kezdőlap bemutatója indul.', 'ok', 3000);
   await showHomeView();

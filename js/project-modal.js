@@ -1,67 +1,142 @@
-// ── ⚙ Beállítások ablak: Dokumentum / Fejezetek másolása (a Megjelenés: designpanel.js) ────────
+// ── Bal oldali dokumentum-panel: ⚙ Dokumentum beállításai / 📋 Fejezetek másolása ──────────
+//
+// A Megjelenéshez hasonló oldalsáv a szerkesztő bal szélén (nem felugró ablak): közben a
+// fejezetfa, a szerkesztő és az előnézet is látszik. A két funkció külön gombbal nyílik a
+// felső sávban; ugyanarra a gombra kattintva (vagy Esc-re / ✕-re) bezárul.
+// (A fájlnév történeti: korábban itt volt a ⚙ Beállítások felugró ablak.)
 
 // A szerkesztőn kívülre ejtett fájl ne nyissa meg a böngészőben (elhagyva az oldalt).
 document.addEventListener('dragover', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
 document.addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) e.preventDefault(); });
 
-function openProjModal(tab = 'doc') {
+const DOC_PANELS = {
+  settings: { title: '⚙ Dokumentum beállításai', body: 'dp-settings', btn: 'btn-doc-settings', load: () => loadDocTab() },
+  copy:     { title: '📋 Fejezetek másolása',    body: 'dp-copy',     btn: 'btn-copy-chapters', load: () => loadCopyTab() },
+};
+
+function docPanelOpen() {
+  const el = document.getElementById('doc-panel');
+  return el && el.classList.contains('open') ? state._docPanel : null;
+}
+
+function toggleDocPanel(which) {
+  if (docPanelOpen() === which) closeDocPanel(); else openDocPanel(which);
+}
+
+function openDocPanel(which) {
+  const def = DOC_PANELS[which];
+  if (!def) return;
   if (!currentProj()) { toast('Előbb nyiss meg egy dokumentumot!', 'err'); return; }
-  switchModalTab(tab);
-  document.getElementById('proj-modal-backdrop').classList.add('open');
+  if (docPanelOpen() === 'settings') flushDocSettings();
+  state._docPanel = which;
+  const el = document.getElementById('doc-panel');
+  el.classList.add('open');
+  el.setAttribute('aria-hidden', 'false');
+  document.getElementById('dp-title').textContent = def.title;
+  Object.entries(DOC_PANELS).forEach(([k, d]) => {
+    document.getElementById(d.body).classList.toggle('active', k === which);
+    const b = document.getElementById(d.btn);
+    if (b) b.classList.toggle('panel-on', k === which);
+  });
+  document.getElementById('copy-dest-row').classList.remove('show');
+  def.load();
+  maybeAutoTour(which === 'copy' ? 'copy' : 'docsettings');
 }
 
-async function closeProjModal() {
-  document.getElementById('proj-modal-backdrop').classList.remove('open');
+function closeDocPanel() {
+  const el = document.getElementById('doc-panel');
+  if (!el || !el.classList.contains('open')) return;
+  if (state._docPanel === 'settings') flushDocSettings();
+  el.classList.remove('open');
+  el.setAttribute('aria-hidden', 'true');
+  state._docPanel = null;
+  Object.values(DOC_PANELS).forEach(d => { const b = document.getElementById(d.btn); if (b) b.classList.remove('panel-on'); });
 }
 
-document.getElementById('proj-modal-backdrop').addEventListener('click', function(e) {
-  if (e.target === this) closeProjModal();
+// Régi hívások (pl. régi linkek / bővítmények) kedvéért.
+function openProjModal(tab) { openDocPanel(tab === 'copy' ? 'copy' : 'settings'); }
+function closeProjModal() { closeDocPanel(); }
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || !docPanelOpen() || state._tourActive) return;
+  if (document.querySelector('.hp-modal-backdrop.open')) return;
+  closeDocPanel();
 });
 
-const MODAL_TABS = ['doc', 'copy'];
-function switchModalTab(tab) {
-  const idx = MODAL_TABS.indexOf(tab);
-  if (idx === -1) return;
-  document.querySelectorAll('#proj-modal .tab').forEach((t, i) => t.classList.toggle('active', i === idx));
-  document.querySelectorAll('#proj-modal .tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
-  if (tab === 'doc') loadDocTab();
-  if (tab === 'copy') loadCopyTab();
-}
+// ── Dokumentum beállításai: cím, alcím, leírás — automatikus mentéssel ─────────────────────
+let _docSettingsTimer = null;
 
-// ── Dokumentum fül: cím, alcím, leírás (a logó a projekt Megjelenés oldalán van) ─────────────────────────────────
 function loadDocTab() {
   const proj = currentProj();
   if (!proj) return;
   document.getElementById('doc-title').value = proj.config.title || '';
   document.getElementById('doc-subtitle').value = proj.config.subtitle || '';
   document.getElementById('doc-description').value = proj.config.description || '';
+  setDocSettingsStatus('', '');
 }
 
-async function saveDocSettings() {
+function setDocSettingsStatus(text, cls) {
+  const el = document.getElementById('doc-settings-status');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'dp-status' + (cls ? ' ' + cls : '');
+}
+
+// Gépelés közben: az előnézet azonnal frissül, a mentés kis szünet után történik.
+function onDocSettingInput() {
+  const proj = currentProj();
+  if (!proj) return;
+  const title = document.getElementById('doc-title').value.trim();
+  if (!title) { setDocSettingsStatus('⚠ A cím nem lehet üres — amíg üres, nem mentünk.', 'err'); clearTimeout(_docSettingsTimer); return; }
+  applyDocSettings(proj);
+  schedulePreview();
+  setDocSettingsStatus('● Mentés…', 'busy');
+  clearTimeout(_docSettingsTimer);
+  _docSettingsTimer = setTimeout(() => saveDocSettings({ quiet: true }), 900);
+}
+
+function applyDocSettings(proj) {
+  const title = document.getElementById('doc-title').value.trim();
+  proj.config.title = title;
+  proj.config.subtitle = document.getElementById('doc-subtitle').value.trim() || title;
+  proj.config.description = document.getElementById('doc-description').value.trim();
+}
+
+// Bezáráskor / panelváltáskor a még függő mentés azonnal lefut.
+function flushDocSettings() {
+  if (!_docSettingsTimer) return;
+  clearTimeout(_docSettingsTimer);
+  _docSettingsTimer = null;
+  saveDocSettings({ quiet: true });
+}
+
+async function saveDocSettings(opts = {}) {
+  _docSettingsTimer = null;
   const proj = currentProj();
   if (!proj) return;
   const title = document.getElementById('doc-title').value.trim();
   if (!title) { toast('A cím nem lehet üres!', 'err'); return; }
-  proj.config.title = title;
-  proj.config.subtitle = document.getElementById('doc-subtitle').value.trim() || title;
-  proj.config.description = document.getElementById('doc-description').value.trim();
+  applyDocSettings(proj);
   const ok = await saveProjectConfig(proj);
   updateBreadcrumb();
-  renderPreview();
+  schedulePreview();
   const hp = (state.homeProjects || []).find(x => x.id === proj.topProjectId);
   const hd = hp && (hp.docs || []).find(x => x.id === proj.docId);
   if (hd) hd.title = title;
-  toast(ok ? '✓ Dokumentum adatai mentve' : '⚠ Mentés sikertelen', ok ? 'ok' : 'err');
+  if (typeof renderDocSwitcher === 'function') renderDocSwitcher();
+  setDocSettingsStatus(ok ? '✓ Mentve' : '⚠ A mentés nem sikerült — próbáld újra.', ok ? 'ok' : 'err');
+  if (!opts.quiet || !ok) toast(ok ? '✓ Dokumentum adatai mentve' : '⚠ Mentés sikertelen', ok ? 'ok' : 'err');
 }
 
 // ── Fejezetek másolása egy másik Dokumentumból ────────────────────────────────
 let _copySource = null; // { folder, data }
+const COPY_EMPTY_HINT = '<div class="hint" style="padding:8px 2px">Előbb válassz dokumentumot.</div>';
 
 async function loadCopyTab() {
   const projSel = document.getElementById('copy-project-select');
   document.getElementById('copy-doc-select').innerHTML = '';
-  document.getElementById('copy-chapters-list').innerHTML = '';
-  document.getElementById('copy-dest-row').style.display = 'none';
+  document.getElementById('copy-chapters-list').innerHTML = COPY_EMPTY_HINT;
+  document.getElementById('copy-dest-row').classList.remove('show');
   _copySource = null;
   projSel.innerHTML = '<option value="">Betöltés...</option>';
   const ids = await cloudListProjectIds();
@@ -79,7 +154,8 @@ async function loadCopyDocs() {
   const projectId = document.getElementById('copy-project-select').value;
   const docSel = document.getElementById('copy-doc-select');
   document.getElementById('copy-chapters-list').innerHTML = '';
-  document.getElementById('copy-dest-row').style.display = 'none';
+  document.getElementById('copy-dest-row').classList.remove('show');
+  document.getElementById('copy-chapters-list').innerHTML = COPY_EMPTY_HINT;
   if (!projectId) { docSel.innerHTML = ''; return; }
   docSel.innerHTML = '<option value="">Betöltés...</option>';
   const docs = await cloudListDocuments(projectId);
@@ -97,8 +173,8 @@ async function loadCopyChapters() {
   const folder = document.getElementById('copy-doc-select').value;
   const list = document.getElementById('copy-chapters-list');
   list.innerHTML = '';
-  document.getElementById('copy-dest-row').style.display = 'none';
-  if (!folder) return;
+  document.getElementById('copy-dest-row').classList.remove('show');
+  if (!folder) { list.innerHTML = COPY_EMPTY_HINT; return; }
   list.innerHTML = '<div class="hint" style="padding:8px">Betöltés...</div>';
   const data = await cloudFetchDocument(folder);
   _copySource = { folder, data };
@@ -125,7 +201,7 @@ async function loadCopyChapters() {
     });
     list.appendChild(row);
   });
-  document.getElementById('copy-dest-row').style.display = 'flex';
+  document.getElementById('copy-dest-row').classList.add('show');
 }
 
 function toggleSelectAll(cb) {
@@ -168,5 +244,7 @@ async function copySelectedChapters() {
   if (state.currentFile && selected.includes(state.currentFile)) {
     const fn = state.currentFile; state.currentFile = null; openFile(fn);
   }
-  toast(`✓ ${copied} fejezet másolva${skipped ? ', ' + skipped + ' kihagyva' : ''}`);
+  document.querySelectorAll('.copy-cb, #copy-select-all').forEach(c => { c.checked = false; });
+  document.querySelectorAll('.copy-chapter-row.selected').forEach(r => r.classList.remove('selected'));
+  toast(`✓ ${copied} fejezet másolva${skipped ? ', ' + skipped + ' kihagyva' : ''} — a fejezetlista végén találod`);
 }

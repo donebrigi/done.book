@@ -71,6 +71,7 @@ async function showHomeView() {
   // Bejelentkezés nélkül semmit nem töltünk és nem mutatunk (a belépő ablak látszik).
   if (!state.isAuthed) return;
   if (!await leaveThemeView()) return;
+  if (typeof closeDocPanel === 'function') closeDocPanel();
   hideBootCover();
   if (state.uiView === 'editor' && hasUnsavedWork()) saveAllDirty({ quiet: true }); // kilépés előtt minden felmegy
   state.uiView = 'home';

@@ -76,6 +76,7 @@ function buildThemeSampleHtml(vars) {
 // ── Megnyitás / bezárás ──
 async function openThemeView(projectId, returnTo) {
   if (!projectId) { toast('Ehhez a dokumentumhoz nem tartozik projekt.', 'err'); return; }
+  if (typeof closeDocPanel === 'function') closeDocPanel();
   if (state.uiView === 'editor' && hasUnsavedWork()) await saveAllDirty({ quiet: true });
   hideBootCover();
   TV.projectId = projectId;
