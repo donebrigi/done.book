@@ -88,7 +88,7 @@ A szerkesztőben a kép-címkére (**✏ kép**) kattintva, vagy az előnézetbe
 ## Linkek
 
 - A **🔗 Link** gomb (Ctrl+K) után, vagy kézzel `](` beírásakor a szerkesztő felajánlja a dokumentum fejezeteit és címsorait — nem kell fejből tudni az azonosítókat. Webcím is beírható.
-- A **nem létező belső hivatkozások** (pl. egy átnevezett fejezetre mutató `#régi-azonosító`) pirosan aláhúzva látszanak, a fában pedig ⚠ jelzi, melyik fejezetben van ilyen.
+- A **nem létező belső hivatkozások** (pl. egy átnevezett fejezetre mutató `#régi-azonosító`) pirosan aláhúzva látszanak, a fában pedig ⚠ jelzi, melyik fejezetben van ilyen. A kódblokkokban és az inline kódban álló minta-linkeket nem ellenőrzi.
 
 ## Előnézet
 
@@ -230,9 +230,19 @@ Rövid, lépésenkénti bemutatók: buborékok mutatják meg a felület részeit
 | **Fejezetek másolása** | a panel első megnyitásakor | honnan (projekt, dokumentum), mit (fejezetek kijelölése), másolás gomb, hová kerülnek |
 | **Megjelenés** | a Megjelenés oldal első megnyitásakor | logó, a három szín, minta oldal, Mentés |
 
-Mindegyik csak egyszer indul el magától (a böngésző megjegyzi), de bármikor újraindítható: jobb felső sarok, profil menü → **❓ Bemutató** — mindig az éppen látott oldal (vagy a nyitott bal oldali panel) bemutatója indul. Bejelentkezés előtt, betöltés közben és megosztott kézikönyvnél nem jelenik meg.
+Mindegyik csak egyszer indul el magától (a böngésző megjegyzi), de bármikor újraindítható — **minden résznek saját ❓ Bemutató gombja van** (kiemelt, lila keretes gomb):
+
+| Hol? | A gomb helye |
+|---|---|
+| Kezdőlap | a táblázat fölött, a kereső sorának jobb szélén |
+| Szerkesztő | a felső sáv jobb szélén, a profil gomb előtt |
+| ⚙ Dokumentum beállításai / 📋 Fejezetek másolása | a bal oldali panel fejlécében |
+| Megjelenés | a fejlécben, a Mentés gomb mellett |
+ Bejelentkezés előtt, betöltés közben és megosztott kézikönyvnél nem jelenik meg.
 
 **Gyakorló dokumentum:** egy importálható dokumentum (`donebook-gyakorlo` mappa) hat fejezetnyi feladattal (szöveg és formázás, fejezetek és csoportok, képek és képszerkesztő, harmonika / ikon / link / táblázat, megjelenés / letöltés / megosztás). Érdemes egy külön „Gyakorló” projektbe importálni, és mindenkinek a saját példányán dolgozni.
+
+**Puska (cheat sheet):** egyoldalas, nyomtatható összefoglaló (`donebook-puska.pdf`, A4 fekvő; a szerkeszthető forrása `donebook-puska.html`). Markdownban is megvan: `donebook-puska.md`, illetve importálható mappaként (`donebook-puska`, a Gyakorló dokumentumhoz hasonlóan: 📤 → Mappa a gépről) a leggyakoribb műveletekről, a „/” menüről, a jelölésekről és a billentyűparancsokról. Felületváltozáskor ezt is frissíteni kell (a lábán a verziószám).
 
 A bemutatók lépései a `js/tour.js`-ben vannak — ha a felület változik, itt kell frissíteni őket.
 
@@ -368,6 +378,13 @@ A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` a
 
 ## Változásnapló
 
+### 4.14 — Bemutató gomb minden résznél
+
+- A **❓ Bemutató** kikerült a profil menüből: minden résznek saját, jól látható gombja van — Kezdőlap (a kereső sorában), szerkesztő (felső sáv jobb szélén), a két bal oldali panel (a panel fejlécében) és a Megjelenés oldal (fejléc).
+- A Kezdőlap és a szerkesztő bemutatója meg is mutatja ezt a gombot.
+- A puska, a Gyakorló dokumentum és a README is frissült.
+- GitHub: nincs kézzel törlendő fájl.
+
 ### 4.13 — Dokumentum beállításai oldalsávban, külön Fejezetek másolása
 
 - A **⚙ Beállítások** felugró ablak helyett **bal oldali panel** (a Megjelenéshez hasonlóan); a gomb neve **⚙ Dokumentum beállításai**. A cím / alcím / leírás **automatikusan ment**, és azonnal látszik az előnézetben (nincs külön Mentés gomb).
@@ -375,6 +392,8 @@ A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` a
 - A panelek ugyanarra a gombra kattintva, ✕-szel vagy Esc-kel zárulnak; nézet- vagy dokumentumváltáskor maguktól bezárulnak.
 - **Bemutató:** a Szerkesztő bemutatója bemutatja mindkét új gombot (16 lépés), és mindkét panelnek saját rövid bemutatója van (első megnyitáskor magától, egyébként ❓ Bemutató nyitott panel mellett).
 - A Gyakorló dokumentum és a felhasználói útmutató is frissült (fejezetmásolás és dokumentumbeállítás feladat).
+- Új, egyoldalas **puska** a kollégáknak (`donebook-puska.pdf`) — nem a repó része, külön kiosztható.
+- **Javítás:** a kódblokkban (```…```) vagy inline kódban álló minta-linkeket (pl. `[szöveg](#azonosito)` egy leírásban) a szerkesztő már nem jelzi hibásnak (nincs piros aláhúzás, nincs ⚠ a fában).
 - GitHub: nincs kézzel törlendő fájl.
 
 ### 4.12 — Bemutató a szerkesztőhöz és a Megjelenéshez

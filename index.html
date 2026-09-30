@@ -44,6 +44,7 @@
       </div>
     </div>
     <button class="btn" onclick="togglePreviewPopout()" id="btn-preview-popout" title="Az előnézetet külön böngészőlapon nyitja meg, élőben frissülve — így a szerkesztő nagyobb helyet kap">↗ Előnézet</button>
+    <button class="btn btn-tour" id="btn-tour-editor" onclick="startTour('editor')" title="A szerkesztő rövid, lépésenkénti bemutatója">❓ Bemutató</button>
   </div>
   <div class="sep"></div>
   <!-- Profil: a korábban külön látszó email cím, 🔑 Jelszó és Kilépés gombok most
@@ -53,7 +54,6 @@
     <button class="btn profile-btn" onclick="toggleProfileMenu(event)" id="btn-profile" title="Profil">👤</button>
     <div id="profile-menu" class="dl-menu">
       <div id="profile-menu-email"></div>
-      <button class="btn" onclick="startTourForCurrentView()" style="width:100%">❓ Bemutató</button>
       <button class="btn" onclick="closeProfileMenu();openPasswordModal()" style="width:100%">🔑 Jelszó módosítása</button>
       <button class="btn" onclick="cloudLogout()" style="width:100%">Kilépés</button>
     </div>
@@ -75,6 +75,7 @@
   <aside id="doc-panel" aria-hidden="true">
     <div class="dp-head">
       <h2 id="dp-title">⚙ Dokumentum beállításai</h2>
+      <button class="btn btn-tour" id="btn-tour-panel" onclick="startDocPanelTour()" title="Ennek a panelnek a rövid bemutatója">❓ Bemutató</button>
       <button class="btn" onclick="closeDocPanel()" title="Bezárás (Esc)">✕</button>
     </div>
 
@@ -265,6 +266,7 @@
     <div class="home-toolbar">
       <input type="text" id="home-search" placeholder="🔍 Keresés dokumentumok között..." oninput="renderHomeList()" />
       <span id="home-count"></span>
+      <button class="btn btn-tour" id="btn-tour-home" onclick="startTour('home')" title="A Kezdőlap rövid, lépésenkénti bemutatója">❓ Bemutató</button>
     </div>
     <div id="home-list"></div>
   </section>
@@ -278,6 +280,7 @@
       <div class="sub">A projekt <b>minden dokumentumára</b> érvényes. Jobbra egy minta oldal mutatja az összes formázást.</div>
     </div>
     <div class="theme-head-actions">
+      <button class="btn btn-tour" id="btn-tour-theme" onclick="startTour('theme')" title="A Megjelenés oldal rövid bemutatója">❓ Bemutató</button>
       <span id="theme-dirty" class="hint"></span>
       <button class="btn" onclick="resetThemeView()">↺ Alapértelmezett</button>
       <button class="btn" onclick="closeThemeView()">✕ Bezárás</button>
