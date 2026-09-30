@@ -847,3 +847,12 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 .driver-popover.kk-tour .driver-popover-arrow-side-bottom { border-bottom-color: var(--bg2); }
 
 .tree-rename-input { flex: 1; min-width: 0; font: inherit; font-size: 13px; color: var(--text); background: var(--bg); border: 1px solid var(--accent); border-radius: 5px; padding: 2px 6px; outline: none; }
+
+/* ── Indítási takaró (a bejelentkező ablak alatt, minden más fölött) ── */
+#boot-cover { position: fixed; inset: 0; z-index: 9990; background: var(--bg); display: flex; align-items: center; justify-content: center; }
+#boot-cover.hidden { display: none; }
+.boot-box { display: flex; flex-direction: column; align-items: center; gap: 14px; color: var(--text2); }
+.boot-logo { font-size: 18px; font-weight: 700; color: var(--accent2); }
+.boot-text { font-size: 13px; color: var(--text3); }
+.boot-spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--border2); border-top-color: var(--accent); animation: boot-spin .8s linear infinite; }
+@keyframes boot-spin { to { transform: rotate(360deg); } }
