@@ -4,7 +4,7 @@
 
 A DONE böngészőben futó szerkesztője kézikönyvek / belső dokumentációk összeállításához. Markdown fejezetekből épít fel egy stílusos, kereshető, navigálható HTML oldalt. Minden adat a felhőben (Supabase) van, így minden bejelentkezett kolléga ugyanazt látja és szerkeszti.
 
-Nincs build lépés és nincs saját szerver: az `index.html` mellé a `css/`, `js/` és `vendor/` mappát kell feltölteni (pl. GitHub Pages-re), és böngészőben megnyitni.
+Nincs build lépés és nincs saját szerver: az `index.html` mellé a `css/`, `js/` és `vendor/` mappát, valamint a három ikonfájlt (`favicon.svg`, `favicon.ico`, `apple-touch-icon.png`) kell feltölteni (pl. GitHub Pages-re), és böngészőben megnyitni.
 
 ## Tartalom
 
@@ -340,6 +340,9 @@ title: Telepítés
 
 ```
 index.html              # a felület HTML váza
+favicon.svg             # böngészőfül-ikon (könyv pipával) — ebből készül a másik kettő
+favicon.ico             # ugyanez régebbi böngészőknek (16/32/48 px)
+apple-touch-icon.png    # ugyanez telefonos kezdőképernyőre (180 px)
 css/editor.css          # a szerkesztő stílusa
 vendor/
   codemirror.bundle.js  # CodeMirror 6 + JSZip egy fájlban (lásd vendor/README.md)
@@ -377,6 +380,13 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.15 — Saját ikon a böngészőfülön
+
+- A DONE.book kapott egy **favicont**: fekete lekerekített négyzet, fehér nyitott könyv, narancs pipa (a logótervek 4. ikonja). Látszik a böngészőfülön, a könyvjelzőkben, és telefonon a kezdőképernyőre tett ikonon.
+- Új fájlok a repó gyökerében: `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` — ezeket is fel kell tölteni. Ha az ikont cserélni kell, a `favicon.svg` a forrás.
+- A megosztott 🔗 linken megnyitott kész kézikönyv és a letöltött HTML nem kapja meg ezt az ikont (azok az ügyfélnek szólnak).
+- GitHub: nincs kézzel törlendő fájl. A böngésző a régi (üres) ikont egy ideig megjegyezheti — Ctrl+Shift+R segít.
 
 ### 4.14 — Bemutató gomb minden résznél
 
