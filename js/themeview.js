@@ -121,6 +121,7 @@ async function openThemeView(projectId, returnTo) {
   renderThemePreview();
   updateThemeDirty();
   if (migrated || logoMigrated) toast('A projekt még nem kapott közös ' + [migrated && 'megjelenést', logoMigrated && 'logót'].filter(Boolean).join(' és ') + ' — egy meglévő dokumentuméból indultunk. Mentéssel ez lesz a projekté.', 'ok', 6000);
+  maybeAutoTour('theme');
 }
 
 async function closeThemeView() {

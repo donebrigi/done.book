@@ -62,6 +62,7 @@ async function cloudLoadProject(folderId, topProjectId, docId) {
   if (project.fileOrder.length) openFile(project.fileOrder[0]);
   else showEmptyDocState();
   flashStatus('Dokumentum betöltve: ' + projectDisplayTitle(project), 'saved', 2500);
+  maybeAutoTour('editor');
 }
 
 // A base64-ként beágyazott képeket külön fájlba teszi, és a fejezetet elmenti.
