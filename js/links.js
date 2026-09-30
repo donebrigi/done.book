@@ -37,10 +37,18 @@ function getAnchorIndex(liveText) {
 
 const LINK_RE = /\]\(#([^)\s]*)\)/g;
 
+// A kódblokkok (```…```) és az inline kód (`…`) tartalmát szóközre cseréli (a hossz marad),
+// hogy az ott szereplő minta-linkeket (pl. egy puskában) ne jelezzük hibásnak.
+function maskCodeForLinks(text) {
+  let out = (text || '').replace(/^([ \t]*)(```|~~~)[^\n]*\n[\s\S]*?(?:^[ \t]*\2[^\n]*$|(?![\s\S]))/gm, m => m.replace(/[^\n]/g, ' '));
+  out = out.replace(/`[^`\n]+`/g, m => ' '.repeat(m.length));
+  return out;
+}
+
 function brokenLinksIn(content) {
   const { set } = getAnchorIndex();
   const out = [];
-  for (const m of (content || '').matchAll(LINK_RE)) {
+  for (const m of maskCodeForLinks(content).matchAll(LINK_RE)) {
     let id = m[1];
     try { id = decodeURIComponent(id); } catch(e) {}
     if (!set.has(id)) out.push(id);
@@ -48,24 +56,21 @@ function brokenLinksIn(content) {
   return out;
 }
 
-// Szerkesztő-dekoráció: hibás belső link piros hullámos aláhúzással.
+// Szerkesztő-dekoráció: hibás belső link piros hullámos aláhúzással (kódban nem).
 function buildLinkDecorations(view) {
-  const { set } = getAnchorIndex(view.state.doc.toString());
+  const text = view.state.doc.toString();
+  const { set } = getAnchorIndex(text);
+  const masked = text.length < 400000 ? maskCodeForLinks(text) : text;
   const decos = [];
   for (const { from, to } of view.visibleRanges) {
-    let pos = from;
-    while (pos <= to) {
-      const line = view.state.doc.lineAt(pos);
-      if (line.length < 5000) {
-        for (const m of line.text.matchAll(LINK_RE)) {
-          let id = m[1];
-          try { id = decodeURIComponent(id); } catch(e) {}
-          if (set.has(id)) continue;
-          const start = line.from + m.index + 2, end = line.from + m.index + m[0].length - 1;
-          decos.push(CM.Decoration.mark({ class: 'cm-kk-badlink', attributes: { title: id ? `Nem létező hivatkozás: #${id}` : 'Üres hivatkozás' } }).range(start, end));
-        }
-      }
-      pos = line.to + 1;
+    const re = new RegExp(LINK_RE.source, 'g');
+    const chunk = masked.slice(from, to);
+    for (const m of chunk.matchAll(re)) {
+      let id = m[1];
+      try { id = decodeURIComponent(id); } catch(e) {}
+      if (set.has(id)) continue;
+      const start = from + m.index + 2, end = from + m.index + m[0].length - 1;
+      decos.push(CM.Decoration.mark({ class: 'cm-kk-badlink', attributes: { title: id ? `Nem létező hivatkozás: #${id}` : 'Üres hivatkozás' } }).range(start, end));
     }
   }
   return CM.Decoration.set(decos, true);

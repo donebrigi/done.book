@@ -4,7 +4,9 @@
 // az éppen magyarázott rész világít. Könyvtár: driver.js (MIT, vendor/driver.js.iife.js).
 //
 //  • Első alkalommal magától indul (nézetenként egyszer — a böngésző megjegyzi).
-//  • Bármikor újraindítható: profil menü → ❓ Bemutató.
+//  • Bármikor újraindítható: minden oldalon / panelen saját ❓ Bemutató gomb van
+//    (Kezdőlap: a kereső mellett; szerkesztő: a felső sáv jobb szélén; Megjelenés: a fejlécben;
+//    bal oldali panelek: a panel fejlécében).
 //  • Ha egy lépés eleme épp nem látszik (pl. még nincs dokumentum), a lépés kimarad.
 //
 // Új bemutató (pl. a szerkesztőhöz) = egy új bejegyzés a TOURS objektumban.
@@ -22,7 +24,8 @@ const TOURS = {
     { element: '.doc-table thead', popover: { title: 'A dokumentumok táblázata', description: 'A <b>Cím</b> vagy a <b>Dátum</b> fejlécére kattintva rendezhetsz; újabb kattintással megfordul a sorrend.', side: 'bottom' } },
     { element: '.doc-table tbody tr', popover: { title: 'Egy dokumentum', description: 'A címére vagy a <b>Megnyitás</b> gombra kattintva nyílik meg a szerkesztőben. <b>⬇ PDF</b> és <b>⬇ HTML</b>: a kész kézikönyv letöltése, <b>🔗</b>: megnyitás új lapon + a link a vágólapra kerül, <b>✏</b> átnevezés, <b>🗑</b> törlés.<br><br>💡 A sort megfogva és egy bal oldali projektre <b>húzva</b> áthelyezheted a dokumentumot.', side: 'top' } },
     { element: '#home-search', popover: { title: 'Keresés', description: 'Cím vagy projektnév szerint szűri a táblázatot.', side: 'bottom' } },
-    { element: '.profile-menu-wrap', popover: { title: 'A fiókod', description: 'Itt módosíthatod a jelszavad, itt lépsz ki — és itt indíthatod újra ezt a bemutatót (<b>❓ Bemutató</b>).', side: 'left', align: 'start' } },
+    { element: '#btn-tour-home', popover: { title: 'Bemutató bármikor', description: 'Ezzel a gombbal bármikor újraindíthatod ezt a bemutatót. <b>Minden résznek saját ❓ Bemutató gombja van</b>: a szerkesztőben a felső sáv jobb szélén, a Megjelenés oldal fejlécében, a bal oldali panelek fejlécében.', side: 'bottom', align: 'end' } },
+    { element: '.profile-menu-wrap', popover: { title: 'A fiókod', description: 'Itt módosíthatod a jelszavad, és itt lépsz ki.', side: 'left', align: 'start' } },
     { popover: { title: 'Kész is! 🎉', description: 'Nyiss meg egy dokumentumot, vagy hozz létre egy újat a projekt fejlécének <b>+ Új dokumentum</b> gombjával — a szerkesztőben egy újabb rövid bemutató vár. Gyakorolni a <b>Gyakorló dokumentumban</b> tudsz, részletes leírás a <b>DONE.book felhasználói útmutatóban</b>.' } },
   ],
 
@@ -42,7 +45,7 @@ const TOURS = {
     { element: '#btn-design', popover: { title: 'Megjelenés', description: 'A projekt színei (elsődleges, másodlagos, harmadlagos) és logója — a projekt <b>minden</b> dokumentumára érvényes.', side: 'bottom' } },
     { element: '#btn-download', popover: { title: 'Letöltés', description: '<b>PDF</b>, <b>HTML</b>, nyomtatás és a forrásfájlok (ZIP) — mindig a dokumentum aktuális állapotából, nem kell semmit „legenerálni”.', side: 'bottom', align: 'end' } },
     { element: '#btn-preview-popout', popover: { title: 'Nagyobb hely', description: 'Az előnézet külön böngészőlapra (pl. második monitorra) tehető, így a szerkesztő kitölti a képernyőt.', side: 'bottom', align: 'end' } },
-    { popover: { title: 'Jó munkát! 🚀', description: 'Ha gyakorolnál, nyisd meg a <b>Gyakorló dokumentumot</b> — feladatokkal vezet végig minden funkción. A bemutatót bármikor újraindíthatod: profil menü → <b>❓ Bemutató</b>.' } },
+    { element: '#btn-tour-editor', popover: { title: 'Jó munkát! 🚀', description: 'Ezzel a gombbal bármikor újraindíthatod ezt a bemutatót. Ha gyakorolnál, nyisd meg a <b>Gyakorló dokumentumot</b> — feladatokkal vezet végig minden funkción.', side: 'bottom', align: 'end' } },
   ],
 
   // A bal oldali panelek saját, rövid bemutatója (első megnyitáskor magától indul).
@@ -66,7 +69,7 @@ const TOURS = {
     { element: '.tf-row[data-key="secondary"]', popover: { title: 'Másodlagos szín', description: 'Címsor 2 és a linkek.', side: 'right' } },
     { element: '.tf-row[data-key="tertiary"]', popover: { title: 'Harmadlagos szín', description: 'Az oldal és a kártyák háttere. Legyen világos — a szöveg mindig sötét.', side: 'right' } },
     { element: '.theme-preview', popover: { title: 'Minta oldal', description: 'Minden formázás egy helyen — itt azonnal látod, mire hat egy-egy szín.', side: 'left', align: 'start' } },
-    { element: '.theme-head-actions', popover: { title: 'Mentés', description: 'A változások csak a <b>✓ Mentés</b> után lesznek érvényesek. Az <b>↺ Alapértelmezett</b> visszaállítja az alapszíneket.', side: 'bottom', align: 'end' } },
+    { element: '.theme-head-actions', popover: { title: 'Mentés (és bemutató)', description: 'A változások csak a <b>✓ Mentés</b> után lesznek érvényesek. Az <b>↺ Alapértelmezett</b> visszaállítja az alapszíneket. A <b>❓ Bemutató</b> gombbal ez a kör bármikor újraindítható.', side: 'bottom', align: 'end' } },
   ],
 };
 
@@ -134,7 +137,14 @@ function tourContextOk(name) {
   return state.uiView === name;
 }
 
-// Profil menü → ❓ Bemutató: az aktuális nézet (vagy a nyitott bal oldali panel) bemutatója; ha nincs, a Kezdőlapé.
+// A nyitott bal oldali panel (⚙ / 📋) bemutatója — a panel fejlécének ❓ gombja.
+function startDocPanelTour() {
+  const panel = typeof docPanelOpen === 'function' ? docPanelOpen() : null;
+  if (panel) startTour(panel === 'copy' ? 'copy' : 'docsettings');
+}
+
+// Az aktuális nézet (vagy a nyitott bal oldali panel) bemutatója; ha nincs, a Kezdőlapé.
+// (Régebben a profil menüből indult; most minden résznek saját ❓ Bemutató gombja van.)
 async function startTourForCurrentView() {
   if (typeof closeProfileMenu === 'function') closeProfileMenu();
   const panel = typeof docPanelOpen === 'function' ? docPanelOpen() : null;
