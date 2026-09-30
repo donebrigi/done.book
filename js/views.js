@@ -1,3 +1,16 @@
+// ── Indítási takaró ──
+function showBootCover(text) {
+  const c = document.getElementById('boot-cover');
+  if (!c) return;
+  const t = document.getElementById('boot-text');
+  if (t && text) t.textContent = text;
+  c.classList.remove('hidden');
+}
+function hideBootCover() {
+  const c = document.getElementById('boot-cover');
+  if (c) c.classList.add('hidden');
+}
+
 // ── Nézetváltás: Kezdőlap / Szerkesztő / Megjelenés ──
 function updateTopbarToolsVisibility() {
   const isEditor = state.uiView === 'editor';
@@ -43,6 +56,7 @@ async function leaveThemeView() {
 }
 
 function enterEditorView() {
+  hideBootCover();
   document.getElementById('view-theme').classList.remove('active');
   state.uiView = 'editor';
   const home = document.getElementById('view-home'), main = document.getElementById('main');
@@ -54,7 +68,10 @@ function enterEditorView() {
 }
 
 async function showHomeView() {
+  // Bejelentkezés nélkül semmit nem töltünk és nem mutatunk (a belépő ablak látszik).
+  if (!state.isAuthed) return;
   if (!await leaveThemeView()) return;
+  hideBootCover();
   if (state.uiView === 'editor' && hasUnsavedWork()) saveAllDirty({ quiet: true }); // kilépés előtt minden felmegy
   state.uiView = 'home';
   const home = document.getElementById('view-home'), main = document.getElementById('main');

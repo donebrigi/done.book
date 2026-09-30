@@ -52,22 +52,27 @@ async function initApp() {
   const session = await cloudCheckSession();
   state.booting = false;
 
-  const shared = session ? parseSharedViewHash() : null;
+  // Bejelentkezés nélkül: csak a belépő ablak látszik; a navigáció a belépés után
+  // történik (lásd onLoggedIn) — addig nem töltünk és nem rajzolunk semmit.
+  if (!session) {
+    const lastDoc = readLastDoc();
+    if (lastDoc && lastDoc.cloudFolder && !parseSharedViewHash()) state.pendingCloudResume = lastDoc;
+    return;
+  }
+
+  const shared = parseSharedViewHash();
   if (shared) { openSharedView(shared.projectId, shared.docId); return; }
 
   const last = readLastDoc();
   if (last && last.cloudFolder) {
-    if (session) {
+    try {
       // Ha közben törölték / áthelyezték, a Kezdőlapra megyünk.
       if (await cloudDownloadText(last.cloudFolder + '/config.json')) {
         await cloudLoadProject(last.cloudFolder, last.topProjectId, last.docId);
         return;
       }
-      forgetLastDoc();
-    } else {
-      state.pendingCloudResume = last; // bejelentkezés után nyílik meg (lásd onLoggedIn)
-      return;
-    }
+    } catch(e) { console.error('Az utolsó dokumentum megnyitása nem sikerült:', e); }
+    forgetLastDoc();
   }
   showHomeView();
 }

@@ -77,6 +77,7 @@ function buildThemeSampleHtml(vars) {
 async function openThemeView(projectId, returnTo) {
   if (!projectId) { toast('Ehhez a dokumentumhoz nem tartozik projekt.', 'err'); return; }
   if (state.uiView === 'editor' && hasUnsavedWork()) await saveAllDirty({ quiet: true });
+  hideBootCover();
   TV.projectId = projectId;
   TV.returnTo = returnTo || state.uiView;
   const meta = (state.homeProjects || []).find(p => p.id === projectId) || state.currentTopProjectMeta || await cloudGetProjectMeta(projectId);

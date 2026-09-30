@@ -30,7 +30,7 @@ const TOURS = {
 function tourAvailable(name) { return !!TOURS[name] && !!(window.driver && window.driver.js && window.driver.js.driver); }
 
 function startTour(name) {
-  if (!tourAvailable(name)) return false;
+  if (!tourAvailable(name) || tourBlocked()) return false;
   if (state._tourActive) return true;
   // Csak azok a lépések, amelyeknek az eleme most látszik (vagy nincs eleme).
   const steps = TOURS[name]().filter(s => !s.element || isTourTargetVisible(s.element));
@@ -55,6 +55,16 @@ function startTour(name) {
   return true;
 }
 
+// Bejelentkezés előtt, betöltés közben és megosztott kézikönyvnél nincs bemutató.
+function tourBlocked() {
+  const gate = document.getElementById('auth-gate');
+  const cover = document.getElementById('boot-cover');
+  return !state.isAuthed
+    || (gate && !gate.classList.contains('hidden'))
+    || (cover && !cover.classList.contains('hidden'))
+    || !!parseSharedViewHash();
+}
+
 function isTourTargetVisible(sel) {
   const el = document.querySelector(sel);
   if (!el) return false;
@@ -68,6 +78,7 @@ function maybeAutoTour(name) {
   try { seen = localStorage.getItem(TOUR_SEEN_KEY + name) === '1'; } catch(e) {}
   if (seen || state._tourActive || !tourAvailable(name)) return;
   setTimeout(() => {
+    if (tourBlocked()) return;
     if (state.uiView === name && !document.querySelector('.hp-modal-backdrop.open')) startTour(name);
   }, 700);
 }

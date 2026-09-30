@@ -52,7 +52,7 @@ function onLoggedIn() {
     cloudLoadProject(resume.cloudFolder, resume.topProjectId, resume.docId);
     return;
   }
-  if (state.uiView === 'home') showHomeView();
+  showHomeView();
 }
 supabaseClient.auth.onAuthStateChange((_event, session) => updateAuthUI(session));
 
@@ -72,15 +72,19 @@ function getDocShareUrl(projectId, docId) {
     '#view/' + encodeURIComponent(projectId) + '/' + encodeURIComponent(docId);
 }
 async function openSharedView(projectId, docId) {
-  toast('☁️ Kézikönyv betöltése...', 'ok', 2500);
-  const proj = await loadDocForExport(projectId, docId);
+  // A szerkesztő felülete ne villanjon fel: a kész kézikönyv megjelenéséig a takaró látszik.
+  showBootCover('Kézikönyv betöltése…');
+  let proj = null;
+  try { proj = await loadDocForExport(projectId, docId); } catch(e) { console.error(e); }
   if (!proj) {
     toast('⚠ Ez a dokumentum nem található (lehet, hogy törölték vagy áthelyezték).', 'err', 6000);
-    location.hash = '';
+    history.replaceState(null, '', location.pathname + location.search);
     showHomeView();
     return;
   }
-  const html = await buildDocHtml(proj);
+  let html;
+  try { html = await buildDocHtml(proj); }
+  catch(e) { console.error(e); toast('⚠ A kézikönyv összeállítása nem sikerült.', 'err', 6000); showHomeView(); return; }
   // A teljes oldal tartalmát lecseréljük a kész kézikönyvre — ugyanúgy, mintha
   // közvetlenül a letöltött HTML fájlt nyitottad volna meg.
   document.open();
