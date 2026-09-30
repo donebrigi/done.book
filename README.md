@@ -204,9 +204,19 @@ A korábbi (4.7 előtti) beállításokat a szerkesztő automatikusan átveszi: 
 
 ## Interaktív bemutató
 
-Az első belépés után a Kezdőlapon egy rövid, lépésenkénti bemutató indul: buborékok mutatják meg a felület részeit (projektek, Összes dokumentum, Új projekt, projekt fejléce, táblázat, egy dokumentum gombjai, keresés, fiók). A **Tovább** gombbal vagy a → billentyűvel lehet lépni, az **Esc**-kel bármikor kilépni. Ezután nem indul újra magától (a böngésző megjegyzi), de bármikor elindítható: jobb felső sarok, profil menü → **❓ Bemutató**.
+Rövid, lépésenkénti bemutatók: buborékok mutatják meg a felület részeit, a háttér elsötétül, csak a magyarázott rész látszik. A **Tovább** gombbal vagy a → billentyűvel lehet lépni, az **Esc**-kel bármikor kilépni.
 
-A bemutató lépései a `js/tour.js`-ben vannak (ha a felület változik, itt kell frissíteni őket). A szerkesztő és a Megjelenés oldal bemutatója később készül; addig a ❓ Bemutató a Kezdőlap bemutatóját indítja.
+| Bemutató | Mikor indul magától? | Mit mutat meg? |
+|---|---|---|
+| **Kezdőlap** | az első belépés után | projektek, Összes dokumentum, Új projekt, projekt fejléce, táblázat, egy dokumentum gombjai (húzással áthelyezés), keresés, fiók |
+| **Szerkesztő** | az első dokumentum megnyitásakor | fejezetek fája = menü, + Fejezet / + Csoport, egy fejezet gombjai (átnevezés), fejezet címe, eszköztár, „/” menü és Ctrl+V, élő előnézet, mentés és ütközés, dokumentumváltó, Megjelenés, Letöltés, külön lapos előnézet |
+| **Megjelenés** | a Megjelenés oldal első megnyitásakor | logó, a három szín, minta oldal, Mentés |
+
+Mindegyik csak egyszer indul el magától (a böngésző megjegyzi), de bármikor újraindítható: jobb felső sarok, profil menü → **❓ Bemutató** — mindig az éppen látott oldal bemutatója indul. Bejelentkezés előtt, betöltés közben és megosztott kézikönyvnél nem jelenik meg.
+
+**Gyakorló dokumentum:** egy importálható dokumentum (`donebook-gyakorlo` mappa) hat fejezetnyi feladattal (szöveg és formázás, fejezetek és csoportok, képek és képszerkesztő, harmonika / ikon / link / táblázat, megjelenés / letöltés / megosztás). Érdemes egy külön „Gyakorló” projektbe importálni, és mindenkinek a saját példányán dolgozni.
+
+A bemutatók lépései a `js/tour.js`-ben vannak — ha a felület változik, itt kell frissíteni őket.
 
 ## Kezdőlap
 
@@ -339,6 +349,11 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.12 — Bemutató a szerkesztőhöz és a Megjelenéshez
+
+- Új bemutatók: **Szerkesztő** (14 lépés) és **Megjelenés** (7 lépés); első megnyitáskor magától indulnak, a ❓ Bemutató mindig az aktuális oldalét indítja.
+- **Gyakorló dokumentum** (importálható, `donebook-gyakorlo`): feladatok minden fő funkcióhoz.
 
 ### 4.11 — Tisztább indulás
 
