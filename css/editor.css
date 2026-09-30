@@ -854,3 +854,10 @@ body { font-family: var(--sans); background: var(--bg); color: var(--text); disp
 #doc-panel .dp-foot .btn { flex: 1; padding: 8px 12px; }
 #doc-panel .form-grid .hint { font-size: 11px; opacity: .8; }
 #topbar .btn.panel-on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent2); }
+
+/* ══ ❓ Bemutató gombok (minden résznél saját) ═══════════════════════════════ */
+.btn.btn-tour { border-color: var(--accent); color: var(--accent2); background: var(--accent-soft); white-space: nowrap; }
+.btn.btn-tour:hover { filter: brightness(1.1); }
+#topbar .btn.btn-tour { padding: 5px 10px; font-size: 13px; }
+.home-toolbar .btn-tour { margin-left: auto; }
+#doc-panel .dp-head .btn.btn-tour { padding: 3px 8px; font-size: 12px; }
