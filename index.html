@@ -9,6 +9,12 @@
 </head>
 <body>
 
+<!-- Indítási takaró: amíg el nem dől, mi jelenjen meg (bejelentkezés / Kezdőlap / dokumentum /
+     megosztott kézikönyv), a felület nem villan fel. Megosztott (#view/…) linknél a kész
+     kézikönyv megjelenéséig marad. -->
+<div id="boot-cover"><div class="boot-box"><div class="boot-logo">📖 DONE.book</div><div class="boot-spinner"></div><div class="boot-text" id="boot-text">Betöltés…</div></div></div>
+<script>if (/^#view\//.test(location.hash)) document.getElementById('boot-text').textContent = 'Kézikönyv betöltése…';</script>
+
 <!-- Top bar -->
 <div id="topbar">
   <button class="btn" onclick="showHomeView()" title="Kezdőlap — projektek" style="padding:5px 10px;font-size:13px">🏠 Kezdőlap</button>
@@ -365,7 +371,7 @@
 </div>
 
 <!-- Bejelentkezés (Supabase Auth) — amíg nincs bejelentkezve, ez fedi le a teljes felületet -->
-<div id="auth-gate">
+<div id="auth-gate" class="hidden">
   <div id="auth-box">
     <div style="font-size:16px;font-weight:600;margin-bottom:2px;color:var(--accent2)">📖 DONE.book</div>
     <p>Jelentkezz be a folytatáshoz</p>

@@ -204,7 +204,7 @@ A korábbi (4.7 előtti) beállításokat a szerkesztő automatikusan átveszi: 
 
 ## Interaktív bemutató
 
-Az első belépéskor a Kezdőlapon egy rövid, lépésenkénti bemutató indul: buborékok mutatják meg a felület részeit (projektek, Összes dokumentum, Új projekt, projekt fejléce, táblázat, egy dokumentum gombjai, keresés, fiók). A **Tovább** gombbal vagy a → billentyűvel lehet lépni, az **Esc**-kel bármikor kilépni. Ezután nem indul újra magától (a böngésző megjegyzi), de bármikor elindítható: jobb felső sarok, profil menü → **❓ Bemutató**.
+Az első belépés után a Kezdőlapon egy rövid, lépésenkénti bemutató indul: buborékok mutatják meg a felület részeit (projektek, Összes dokumentum, Új projekt, projekt fejléce, táblázat, egy dokumentum gombjai, keresés, fiók). A **Tovább** gombbal vagy a → billentyűvel lehet lépni, az **Esc**-kel bármikor kilépni. Ezután nem indul újra magától (a böngésző megjegyzi), de bármikor elindítható: jobb felső sarok, profil menü → **❓ Bemutató**.
 
 A bemutató lépései a `js/tour.js`-ben vannak (ha a felület változik, itt kell frissíteni őket). A szerkesztő és a Megjelenés oldal bemutatója később készül; addig a ❓ Bemutató a Kezdőlap bemutatóját indítja.
 
@@ -339,6 +339,12 @@ js/
 A fájlok sima (nem ES-modul) szkriptek; a betöltési sorrend az `index.html` alján van.
 
 ## Változásnapló
+
+### 4.11 — Tisztább indulás
+
+- Induláskor egy „Betöltés…” képernyő látszik, amíg el nem dől, mi jelenjen meg — a szerkesztő felülete és a belépő ablak nem villan fel feleslegesen.
+- **Bejelentkezés nélkül** csak a belépő ablak látszik: a DONE.book semmit nem tölt be a háttérben, és a **bemutató sem indul el** (csak a belépés után, a Kezdőlapon).
+- **Megosztott link** (🔗) megnyitásakor — bejelentkezve vagy belépés után — a „Kézikönyv betöltése…” képernyő után egyből a kész kézikönyv jelenik meg, a szerkesztő felülete nem villan fel közben.
 
 ### 4.10 — Bemutató, átnevezés, DONE.book
 
